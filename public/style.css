@@ -96,6 +96,8 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.25s ease, color 0.25s ease;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -514,6 +516,7 @@ body {
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
   padding: 20px;
   display: flex;
@@ -905,6 +908,7 @@ body {
 .drawer-body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 18px 16px;
   display: flex;
   flex-direction: column;
@@ -1307,7 +1311,7 @@ body {
   justify-content: center;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.35s ease-out, visibility 1s ease-out;
+  transition: opacity 0.35s ease-out, visibility 1.5s ease-out;
 }
 
 .splash-screen.is-hidden {
