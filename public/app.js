@@ -483,6 +483,9 @@ function renderDayEvents() {
     const rawTitle = evt.summary || '(Untitled Event)';
     titleEl.textContent = rawTitle.replace(/^\[(Dad|Mum|Owen|Liv|Olivia|Other)\]/i, '$1').replace(/^Olivia\b/i, 'Liv');
 
+    const bottomRow = document.createElement('div');
+    bottomRow.className = 'event-bottom-row';
+
     const timeEl = document.createElement('div');
     timeEl.className = 'event-time-range';
     timeEl.textContent = formatEventTimeRange(rawStart, rawEnd);
@@ -509,10 +512,12 @@ function renderDayEvents() {
     actionsRow.appendChild(editBtn);
     actionsRow.appendChild(deleteBtn);
 
+    bottomRow.appendChild(timeEl);
+    bottomRow.appendChild(actionsRow);
+
     card.appendChild(topRow);
     card.appendChild(titleEl);
-    card.appendChild(timeEl);
-    card.appendChild(actionsRow);
+    card.appendChild(bottomRow);
 
     calendarEventsContainer.appendChild(card);
   });

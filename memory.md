@@ -1,8 +1,9 @@
-## [2026-10-17T18:40:00+01:00 / v2.10.1]
+## [2026-10-17T19:15:20+01:00 / v2.10.2]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Hardened Netlify function environment variable parsing in calendar.js to automatically strip surrounding single/double quotes and whitespace, pushed to GitHub.
+- **Status:** Integrated edit and delete icon buttons directly onto the same row as the date & time, reducing event card vertical padding and eliminating redundant action row spacing.
 - **Files Changed:**
-  - `netlify/functions/calendar.js`
-  - `memory.md`
-- **Next Objectives:** Ensure Google Calendar has granted access to the service account email and verify Netlify live deployment.
+  - `public/style.css`
+  - `public/app.js`
+  - `public/sw.js`
+- **Next Objectives:** Verify event card compactness and action touch usability on narrow mobile screens.
