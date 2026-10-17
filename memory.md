@@ -1,9 +1,7 @@
-## [2026-10-17T18:21:55+01:00 / v2.10.0]
+## [2026-10-17T18:28:15+01:00 / v2.10.0]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Added app version label ('JustUs v2.10.0') to the bottom of the Settings menu, styled cleanly with automatic bottom positioning.
+- **Status:** Initialized git repository, configured remote SSH origin (`git@github.com:Davidha73/FamCal.git`), and published the main branch with all source files.
 - **Files Changed:**
-  - `public/index.html`
-  - `public/style.css`
-  - `public/sw.js`
-- **Next Objectives:** Verify drawer scrolling and bottom footer alignment across varied screen heights.
+  - `memory.md`
+- **Next Objectives:** Set up continuous deployment or automated staging if desired.
