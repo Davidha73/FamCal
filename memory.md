@@ -1,11 +1,12 @@
-## [2026-10-17T20:22:00+01:00 / v2.16.0]
+## [2026-10-17T20:48:00+01:00 / v2.20.0]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Added a header refresh button to the left of the menu icon with spin animation and calendar sync binding.
+- **Status:** Fixed dark mode mobile status bar and header by enabling `viewport-fit=cover`, padding `.app-header` through the notch, and dynamically syncing `theme-color` meta tags.
 - **Files Changed:**
   - `public/index.html`
   - `public/style.css`
   - `public/app.js`
+  - `public/manifest.json`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Verify refresh responsiveness and spin animation during active API fetches.
+- **Next Objectives:** Test dark mode status bar blend and notch styling on mobile devices.

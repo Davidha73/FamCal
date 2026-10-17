@@ -151,6 +151,42 @@ exports.handler = async (event) => {
         };
       }
 
+function formatAllDayDate(val) {
+  if (!val) return '';
+  if (typeof val === 'string') {
+    return val.slice(0, 10);
+  }
+  const d = new Date(val);
+  return d.toISOString().slice(0, 10);
+}
+
+function getNextDayDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function buildEventDates(body) {
+  const isAllDay = Boolean(body.allDay || body.isAllDay || (/^\d{4}-\d{2}-\d{2}$/.test(body.start) && /^\d{4}-\d{2}-\d{2}$/.test(body.end)));
+  if (isAllDay) {
+    const startDate = formatAllDayDate(body.start);
+    let endDate = formatAllDayDate(body.end);
+    if (!endDate || endDate <= startDate) {
+      endDate = getNextDayDate(startDate);
+    } else {
+      endDate = getNextDayDate(endDate);
+    }
+    return {
+      start: { date: startDate },
+      end: { date: endDate }
+    };
+  }
+  return {
+    start: { dateTime: normalizeDateTime(body.start) },
+    end: { dateTime: normalizeDateTime(body.end) }
+  };
+}
+
       case 'POST': {
         const body = JSON.parse(event.body || '{}');
         const { summary, start, end, description } = body;
@@ -163,11 +199,11 @@ exports.handler = async (event) => {
           };
         }
 
+        const dateFields = buildEventDates(body);
         const payload = {
           summary,
           description: description || '',
-          start: { dateTime: normalizeDateTime(start) },
-          end: { dateTime: normalizeDateTime(end) }
+          ...dateFields
         };
 
         const apiRes = await fetch(baseUrl, {
@@ -196,11 +232,11 @@ exports.handler = async (event) => {
           };
         }
 
+        const dateFields = buildEventDates(body);
         const payload = {
           summary,
           description: description || '',
-          start: { dateTime: normalizeDateTime(start) },
-          end: { dateTime: normalizeDateTime(end) }
+          ...dateFields
         };
 
         const updateUrl = `${baseUrl}/${encodeURIComponent(eventId)}`;

@@ -89,6 +89,12 @@
       endStr = `${year}-${month}-${day}T${shift.end}`;
     }
 
+    const allDayToggle = document.getElementById('event-all-day');
+    if (allDayToggle && allDayToggle.checked) {
+      allDayToggle.checked = false;
+      allDayToggle.dispatchEvent(new Event('change'));
+    }
+
     eventStartInput.value = startStr;
     eventEndInput.value = endStr;
   }

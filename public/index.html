@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JustUs">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#090d16">
   <title>Just Us - Shared Family Schedule</title>
   <link rel="icon" type="image/png" href="JustUs Icon.png">
   <link rel="apple-touch-icon" href="JustUs Icon.png">
@@ -108,23 +108,77 @@
           </div>
 
           <div class="form-group">
-            <label for="event-member" class="form-label">Family Member</label>
-            <select id="event-member" name="member" class="form-input form-select" required>
-              <option value="Dad">🔵 Dad</option>
-              <option value="Mum">🟣 Mum</option>
-              <option value="Owen">🟢 Owen</option>
-              <option value="Liv">🟠 Liv</option>
-              <option value="Other">⚪ Other</option>
+            <label id="event-member-label" class="form-label">Family Member</label>
+            <div class="custom-dropdown" id="event-member-dropdown">
+              <button type="button" class="custom-dropdown-trigger form-input" id="event-member-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="event-member-label">
+                <div class="custom-dropdown-selected">
+                  <span id="event-member-dropdown-dot" class="member-dot dot-dad"></span>
+                  <span id="event-member-dropdown-label" class="custom-dropdown-label">Dad</span>
+                </div>
+                <span class="material-symbols-rounded custom-dropdown-arrow">expand_more</span>
+              </button>
+              <div class="custom-dropdown-menu hidden" id="event-member-dropdown-menu" role="listbox" aria-label="Family Member">
+                <button type="button" class="custom-dropdown-item is-selected" data-member="Dad" role="option" aria-selected="true">
+                  <div class="custom-dropdown-item-info">
+                    <span class="member-dot dot-dad"></span>
+                    <span class="custom-dropdown-item-name">Dad</span>
+                  </div>
+                  <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+                </button>
+                <button type="button" class="custom-dropdown-item" data-member="Mum" role="option" aria-selected="false">
+                  <div class="custom-dropdown-item-info">
+                    <span class="member-dot dot-mum"></span>
+                    <span class="custom-dropdown-item-name">Mum</span>
+                  </div>
+                  <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+                </button>
+                <button type="button" class="custom-dropdown-item" data-member="Owen" role="option" aria-selected="false">
+                  <div class="custom-dropdown-item-info">
+                    <span class="member-dot dot-owen"></span>
+                    <span class="custom-dropdown-item-name">Owen</span>
+                  </div>
+                  <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+                </button>
+                <button type="button" class="custom-dropdown-item" data-member="Liv" role="option" aria-selected="false">
+                  <div class="custom-dropdown-item-info">
+                    <span class="member-dot dot-liv"></span>
+                    <span class="custom-dropdown-item-name">Liv</span>
+                  </div>
+                  <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+                </button>
+                <button type="button" class="custom-dropdown-item" data-member="Other" role="option" aria-selected="false">
+                  <div class="custom-dropdown-item-info">
+                    <span class="member-dot dot-other"></span>
+                    <span class="custom-dropdown-item-name">Other</span>
+                  </div>
+                  <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+                </button>
+              </div>
+            </div>
+            <select id="event-member" name="member" class="settings-user-select-hidden" aria-hidden="true" tabindex="-1">
+              <option value="Dad">Dad</option>
+              <option value="Mum">Mum</option>
+              <option value="Owen">Owen</option>
+              <option value="Liv">Liv</option>
+              <option value="Other">Other</option>
             </select>
+          </div>
+
+          <div class="form-row-toggle">
+            <span class="form-toggle-title">All-day Event</span>
+            <label class="toggle-switch" for="event-all-day" title="Toggle All-day Event">
+              <input type="checkbox" id="event-all-day" name="allDay" class="toggle-switch-input">
+              <span class="toggle-switch-track"></span>
+            </label>
           </div>
 
           <div class="form-grid-two">
             <div class="form-group">
-              <label for="event-start" class="form-label">Start Time</label>
+              <label for="event-start" id="event-start-label" class="form-label">Start Time</label>
               <input type="datetime-local" id="event-start" name="start" class="form-input" required>
             </div>
             <div class="form-group">
-              <label for="event-end" class="form-label">End Time</label>
+              <label for="event-end" id="event-end-label" class="form-label">End Time</label>
               <input type="datetime-local" id="event-end" name="end" class="form-input" required>
             </div>
           </div>

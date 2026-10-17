@@ -16,6 +16,9 @@ const eventSummaryInput = document.getElementById('event-summary');
 const eventMemberSelect = document.getElementById('event-member');
 const eventStartInput = document.getElementById('event-start');
 const eventEndInput = document.getElementById('event-end');
+const eventAllDayInput = document.getElementById('event-all-day');
+const eventStartLabel = document.getElementById('event-start-label');
+const eventEndLabel = document.getElementById('event-end-label');
 const eventsCountSpan = document.getElementById('events-count');
 const feedTitle = document.getElementById('events-heading');
 
@@ -132,7 +135,7 @@ async function initUserProfile() {
   const userDropdownDot = document.getElementById('user-dropdown-dot');
   const userDropdownLabel = document.getElementById('user-dropdown-label');
   const userDropdownGroup = document.getElementById('user-profile-dropdown');
-  const dropdownItems = document.querySelectorAll('.custom-dropdown-item');
+  const dropdownItems = userDropdownGroup ? userDropdownGroup.querySelectorAll('.custom-dropdown-item') : [];
 
   const closeDropdown = () => {
     if (userDropdownMenu) userDropdownMenu.classList.add('hidden');
@@ -205,24 +208,97 @@ async function initUserProfile() {
   }
 }
 
+const eventMemberDropdownGroup = document.getElementById('event-member-dropdown');
+const eventMemberDropdownBtn = document.getElementById('event-member-dropdown-btn');
+const eventMemberDropdownMenu = document.getElementById('event-member-dropdown-menu');
+const eventMemberDropdownDot = document.getElementById('event-member-dropdown-dot');
+const eventMemberDropdownLabel = document.getElementById('event-member-dropdown-label');
+
+function syncEventMemberUI(member) {
+  const cleanMember = member || 'Dad';
+  if (eventMemberSelect) {
+    eventMemberSelect.value = cleanMember;
+  }
+  if (eventMemberDropdownDot) {
+    eventMemberDropdownDot.className = `member-dot dot-${cleanMember.toLowerCase()}`;
+  }
+  if (eventMemberDropdownLabel) {
+    eventMemberDropdownLabel.textContent = cleanMember;
+  }
+  if (eventMemberDropdownMenu) {
+    const items = eventMemberDropdownMenu.querySelectorAll('.custom-dropdown-item');
+    items.forEach((item) => {
+      const isMatch = item.getAttribute('data-member') === cleanMember;
+      item.classList.toggle('is-selected', isMatch);
+      item.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+  }
+  if (window.FamCalShifts) {
+    window.FamCalShifts.renderShiftsForUser(cleanMember);
+  }
+}
+
+function closeEventMemberDropdown() {
+  if (eventMemberDropdownMenu) eventMemberDropdownMenu.classList.add('hidden');
+  if (eventMemberDropdownGroup) eventMemberDropdownGroup.classList.remove('is-open');
+  if (eventMemberDropdownBtn) eventMemberDropdownBtn.setAttribute('aria-expanded', 'false');
+}
+
+function setupEventMemberDropdown() {
+  if (!eventMemberDropdownBtn || !eventMemberDropdownMenu) return;
+
+  eventMemberDropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !eventMemberDropdownMenu.classList.contains('hidden');
+    if (isOpen) {
+      closeEventMemberDropdown();
+    } else {
+      eventMemberDropdownMenu.classList.remove('hidden');
+      if (eventMemberDropdownGroup) eventMemberDropdownGroup.classList.add('is-open');
+      eventMemberDropdownBtn.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  const items = eventMemberDropdownMenu.querySelectorAll('.custom-dropdown-item');
+  items.forEach((item) => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const member = item.getAttribute('data-member');
+      if (member) {
+        syncEventMemberUI(member);
+      }
+      closeEventMemberDropdown();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (eventMemberDropdownGroup && !eventMemberDropdownGroup.contains(e.target)) {
+      closeEventMemberDropdown();
+    }
+  });
+}
+
 function applyTheme(theme) {
+  const themeColor = theme === 'dark' ? '#090d16' : '#f2f2f7';
   if (theme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
     if (iconMoon) iconMoon.classList.add('hidden');
     if (iconSun) iconSun.classList.remove('hidden');
     if (currentThemeLabel) currentThemeLabel.textContent = 'Dark Mode';
-    if (metaThemeColor) metaThemeColor.setAttribute('content', '#090d16');
   } else {
     document.documentElement.removeAttribute('data-theme');
     if (iconMoon) iconMoon.classList.remove('hidden');
     if (iconSun) iconSun.classList.add('hidden');
     if (currentThemeLabel) currentThemeLabel.textContent = 'Light Mode';
-    if (metaThemeColor) metaThemeColor.setAttribute('content', '#f2f2f7');
   }
+  const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+  themeMetas.forEach((m) => m.setAttribute('content', themeColor));
 }
 
 async function initTheme() {
-  const savedTheme = await getSetting('theme', 'light');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const defaultTheme = prefersDark ? 'dark' : 'light';
+  const savedTheme = await getSetting('theme', defaultTheme);
   applyTheme(savedTheme);
 
   if (themeToggleBtn) {
@@ -232,6 +308,50 @@ async function initTheme() {
       applyTheme(newTheme);
       await setSetting('theme', newTheme);
     });
+  }
+}
+
+function formatDateOnly(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function setAllDayMode(isAllDay) {
+  if (!eventStartInput || !eventEndInput) return;
+  if (eventAllDayInput) eventAllDayInput.checked = isAllDay;
+
+  if (isAllDay) {
+    if (eventStartLabel) eventStartLabel.textContent = 'Start Date';
+    if (eventEndLabel) eventEndLabel.textContent = 'End Date';
+
+    const currStart = eventStartInput.value;
+    const currEnd = eventEndInput.value;
+
+    eventStartInput.type = 'date';
+    eventEndInput.type = 'date';
+
+    eventStartInput.value = currStart ? currStart.slice(0, 10) : formatDateOnly(selectedDate);
+    eventEndInput.value = currEnd ? currEnd.slice(0, 10) : (eventStartInput.value || formatDateOnly(selectedDate));
+  } else {
+    if (eventStartLabel) eventStartLabel.textContent = 'Start Time';
+    if (eventEndLabel) eventEndLabel.textContent = 'End Time';
+
+    const currStart = eventStartInput.value;
+    const currEnd = eventEndInput.value;
+
+    eventStartInput.type = 'datetime-local';
+    eventEndInput.type = 'datetime-local';
+
+    const d = new Date(selectedDate);
+    const now = new Date();
+    d.setHours(now.getHours() + 1, 0, 0, 0);
+    eventStartInput.value = currStart && currStart.length === 10 ? `${currStart}T09:00` : formatForDateTimeLocal(d.toISOString());
+    const dEnd = new Date(d.getTime() + 60 * 60 * 1000);
+    eventEndInput.value = currEnd && currEnd.length === 10 ? `${currEnd}T10:00` : formatForDateTimeLocal(dEnd.toISOString());
   }
 }
 
@@ -257,8 +377,32 @@ function formatDisplayDate(isoString) {
   }).format(date);
 }
 
-function formatEventTimeRange(rawStart, rawEnd) {
+function formatEventTimeRange(rawStart, rawEnd, isAllDay = false) {
   if (!rawStart) return 'TBD';
+  if (isAllDay || /^\d{4}-\d{2}-\d{2}$/.test(rawStart)) {
+    const sDate = new Date(rawStart + (rawStart.includes('T') ? '' : 'T00:00:00'));
+    const sDateStr = new Intl.DateTimeFormat('default', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    }).format(sDate);
+    if (!rawEnd || rawEnd === rawStart) {
+      return `All Day · ${sDateStr}`;
+    }
+    const eDate = new Date(rawEnd + (rawEnd.includes('T') ? '' : 'T00:00:00'));
+    const diffDays = Math.round((eDate.getTime() - sDate.getTime()) / 86400000);
+    if (diffDays <= 1) {
+      return `All Day · ${sDateStr}`;
+    }
+    const inclusiveEnd = new Date(eDate.getTime() - 86400000);
+    const eDateStr = new Intl.DateTimeFormat('default', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    }).format(inclusiveEnd);
+    return `All Day · ${sDateStr} — ${eDateStr}`;
+  }
+
   const startD = new Date(rawStart);
   if (isNaN(startD.getTime())) return rawStart;
 
@@ -338,8 +482,20 @@ function getEventMember(evt) {
 
 function getEventsForDay(date) {
   return eventsState.filter((evt) => {
-    const rawStart = evt.start?.dateTime || evt.start?.date;
-    const rawEnd = evt.end?.dateTime || evt.end?.date;
+    const isAllDay = Boolean(evt.start?.date && !evt.start?.dateTime);
+    if (isAllDay) {
+      const startDateStr = evt.start.date;
+      const endDateStr = evt.end?.date || evt.start.date;
+      const [sY, sM, sD] = startDateStr.split('-').map(Number);
+      const startD = new Date(sY, sM - 1, sD, 0, 0, 0);
+      const [eY, eM, eD] = endDateStr.split('-').map(Number);
+      const endExclusiveD = new Date(eY, eM - 1, eD, 0, 0, 0);
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+      const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+      return startD <= dayEnd && endExclusiveD > dayStart;
+    }
+    const rawStart = evt.start?.dateTime;
+    const rawEnd = evt.end?.dateTime;
     if (!rawStart) return false;
     const startD = new Date(rawStart);
     if (isSameDay(startD, date)) return true;
@@ -545,9 +701,10 @@ function renderDayEvents() {
     const bottomRow = document.createElement('div');
     bottomRow.className = 'event-bottom-row';
 
+    const isAllDay = Boolean(evt.start?.date && !evt.start?.dateTime);
     const timeEl = document.createElement('div');
     timeEl.className = 'event-time-range';
-    timeEl.textContent = formatEventTimeRange(rawStart, rawEnd);
+    timeEl.textContent = formatEventTimeRange(rawStart, rawEnd, isAllDay);
 
     const actionsRow = document.createElement('div');
     actionsRow.className = 'event-actions';
@@ -588,13 +745,15 @@ function openForm(isEdit = false) {
   if (isEdit) {
     formHeading.textContent = 'Edit Event';
     submitBtn.textContent = 'Update Event';
+    const currentMember = eventMemberSelect ? eventMemberSelect.value : 'Dad';
+    syncEventMemberUI(currentMember);
   } else {
     formHeading.textContent = 'New Event';
     submitBtn.textContent = 'Save Event';
 
-    if (eventMemberSelect) {
-      eventMemberSelect.value = userProfileSelect ? userProfileSelect.value : (localStorage.getItem('famcal-user-profile') || 'Dad');
-    }
+    const defaultMember = userProfileSelect ? userProfileSelect.value : (localStorage.getItem('famcal-user-profile') || 'Dad');
+    syncEventMemberUI(defaultMember);
+    setAllDayMode(false);
 
     const d = new Date(selectedDate);
     const now = new Date();
@@ -613,15 +772,14 @@ function openForm(isEdit = false) {
 
 if (eventMemberSelect) {
   eventMemberSelect.addEventListener('change', () => {
-    if (window.FamCalShifts) {
-      window.FamCalShifts.renderShiftsForUser(eventMemberSelect.value);
-    }
+    syncEventMemberUI(eventMemberSelect.value);
   });
 }
 
 function closeForm() {
   eventForm.reset();
   eventIdInput.value = '';
+  closeEventMemberDropdown();
   const quickShift = document.getElementById('quick-shift-select');
   if (quickShift) quickShift.value = '';
   formHeading.textContent = 'New Event';
@@ -752,15 +910,38 @@ calendarEventsContainer.addEventListener('click', async (e) => {
       eventMemberSelect.value = getEventMember(item);
     }
 
-    const startVal = item.start?.dateTime || item.start?.date || '';
-    const endVal = item.end?.dateTime || item.end?.date || '';
+    const isAllDay = Boolean(item.start?.date && !item.start?.dateTime);
+    setAllDayMode(isAllDay);
 
-    eventStartInput.value = formatForDateTimeLocal(startVal);
-    eventEndInput.value = formatForDateTimeLocal(endVal);
+    if (isAllDay) {
+      eventStartInput.value = item.start.date;
+      let endDateVal = item.end?.date || item.start.date;
+      const [ey, em, ed] = endDateVal.split('-').map(Number);
+      const endD = new Date(ey, em - 1, ed);
+      endD.setDate(endD.getDate() - 1);
+      const [sy, sm, sd] = item.start.date.split('-').map(Number);
+      const startD = new Date(sy, sm - 1, sd);
+      if (endD >= startD) {
+        eventEndInput.value = formatDateOnly(endD);
+      } else {
+        eventEndInput.value = item.start.date;
+      }
+    } else {
+      const startVal = item.start?.dateTime || '';
+      const endVal = item.end?.dateTime || '';
+      eventStartInput.value = formatForDateTimeLocal(startVal);
+      eventEndInput.value = formatForDateTimeLocal(endVal);
+    }
 
     openForm(true);
   }
 });
+
+if (eventAllDayInput) {
+  eventAllDayInput.addEventListener('change', () => {
+    setAllDayMode(eventAllDayInput.checked);
+  });
+}
 
 eventForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -783,11 +964,13 @@ eventForm.addEventListener('submit', async (e) => {
 
   const isUpdating = Boolean(id);
   const method = isUpdating ? 'PUT' : 'POST';
+  const isAllDay = Boolean(eventAllDayInput && eventAllDayInput.checked);
   const payload = {
     summary: prefixedSummary,
     description: `[Member: ${member}]`,
-    start: new Date(start).toISOString(),
-    end: new Date(end).toISOString()
+    allDay: isAllDay,
+    start: isAllDay ? eventStartInput.value : new Date(start).toISOString(),
+    end: isAllDay ? eventEndInput.value : new Date(end).toISOString()
   };
 
   if (isUpdating) {
@@ -947,6 +1130,7 @@ window.addEventListener('load', async () => {
   }
   await initTheme();
   await initUserProfile();
+  setupEventMemberDropdown();
   if (window.FamCalShifts) {
     await window.FamCalShifts.initShifts({
       getSetting,
