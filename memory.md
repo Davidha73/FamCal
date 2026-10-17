@@ -1,12 +1,9 @@
-## [2026-10-17T20:48:00+01:00 / v2.20.0]
+## [2026-10-17T21:26:00+01:00 / v2.21.0]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Fixed dark mode mobile status bar and header by enabling `viewport-fit=cover`, padding `.app-header` through the notch, and dynamically syncing `theme-color` meta tags.
+- **Status:** Changed Mum's theme color to orange across member dots, calendar badges, and user tags in light and dark modes.
 - **Files Changed:**
-  - `public/index.html`
   - `public/style.css`
-  - `public/app.js`
-  - `public/manifest.json`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Test dark mode status bar blend and notch styling on mobile devices.
+- **Next Objectives:** Verify color harmony and distinctness between Dad (blue), Mum (orange), Owen (green), and Liv (pink).

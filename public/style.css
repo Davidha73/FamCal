@@ -29,8 +29,8 @@
   /* Member Colors (Light) */
   --color-dad: #007aff;
   --bg-dad: rgba(0, 122, 255, 0.12);
-  --color-mum: #af52de;
-  --bg-mum: rgba(175, 82, 222, 0.12);
+  --color-mum: #ff9500;
+  --bg-mum: rgba(255, 149, 0, 0.14);
   --color-owen: #34c759;
   --bg-owen: rgba(52, 199, 89, 0.14);
   --color-liv: #ff4d94;
@@ -68,8 +68,8 @@
   /* Member Colors (Dark) */
   --color-dad: #38bdf8;
   --bg-dad: rgba(56, 189, 248, 0.18);
-  --color-mum: #c084fc;
-  --bg-mum: rgba(192, 132, 252, 0.18);
+  --color-mum: #ff9f0a;
+  --bg-mum: rgba(255, 159, 10, 0.18);
   --color-owen: #4ade80;
   --bg-owen: rgba(74, 222, 128, 0.18);
   --color-liv: #ff60a0;
