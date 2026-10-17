@@ -33,6 +33,7 @@ const iconSun = themeToggleBtn ? themeToggleBtn.querySelector('.icon-sun') : nul
 const currentThemeLabel = document.getElementById('current-theme-label');
 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 
+const refreshBtn = document.getElementById('refresh-btn');
 const menuBtn = document.getElementById('menu-btn');
 const settingsDrawer = document.getElementById('settings-drawer');
 const settingsDrawerBackdrop = document.getElementById('settings-drawer-backdrop');
@@ -909,6 +910,22 @@ function closeSettingsDrawer() {
     settingsDrawer.setAttribute('aria-hidden', 'true');
     settingsDrawerBackdrop.classList.add('hidden');
   }
+}
+
+if (refreshBtn) {
+  refreshBtn.addEventListener('click', async () => {
+    const icon = refreshBtn.querySelector('.material-symbols-rounded');
+    if (icon) icon.classList.add('is-spinning');
+    refreshBtn.disabled = true;
+    try {
+      await loadEvents();
+    } finally {
+      setTimeout(() => {
+        if (icon) icon.classList.remove('is-spinning');
+        refreshBtn.disabled = false;
+      }, 500);
+    }
+  });
 }
 
 if (menuBtn) {
