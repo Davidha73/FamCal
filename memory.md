@@ -1,7 +1,8 @@
-## [2026-10-17T18:28:15+01:00 / v2.10.0]
+## [2026-10-17T18:40:00+01:00 / v2.10.1]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Initialized git repository, configured remote SSH origin (`git@github.com:Davidha73/FamCal.git`), and published the main branch with all source files.
+- **Status:** Hardened Netlify function environment variable parsing in calendar.js to automatically strip surrounding single/double quotes and whitespace, pushed to GitHub.
 - **Files Changed:**
+  - `netlify/functions/calendar.js`
   - `memory.md`
-- **Next Objectives:** Set up continuous deployment or automated staging if desired.
+- **Next Objectives:** Ensure Google Calendar has granted access to the service account email and verify Netlify live deployment.
