@@ -80,18 +80,32 @@ exports.handler = async (event) => {
   }
 
   try {
-    const calendarId = process.env.CALENDAR_ID;
-    const rawKey = process.env.SERVICE_ACCOUNT_KEY;
+    let calendarId = process.env.CALENDAR_ID;
+    let rawKey = process.env.SERVICE_ACCOUNT_KEY;
 
     if (!calendarId || !rawKey) {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Missing CALENDAR_ID or SERVICE_ACCOUNT_KEY environment variables.' })
+        body: JSON.stringify({ error: 'Missing CALENDAR_ID or SERVICE_ACCOUNT_KEY environment variables in Netlify.' })
       };
     }
 
-    const serviceAccountKey = typeof rawKey === 'string' ? JSON.parse(rawKey) : rawKey;
+    if (typeof calendarId === 'string') {
+      calendarId = calendarId.trim().replace(/^['"]|['"]$/g, '');
+    }
+
+    let serviceAccountKey;
+    if (typeof rawKey === 'string') {
+      let sanitizedKey = rawKey.trim();
+      if ((sanitizedKey.startsWith("'") && sanitizedKey.endsWith("'")) || (sanitizedKey.startsWith('"') && sanitizedKey.endsWith('"'))) {
+        sanitizedKey = sanitizedKey.slice(1, -1).trim();
+      }
+      serviceAccountKey = JSON.parse(sanitizedKey);
+    } else {
+      serviceAccountKey = rawKey;
+    }
+
     const accessToken = await getAccessToken(serviceAccountKey);
     const baseUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
 
