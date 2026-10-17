@@ -126,19 +126,77 @@ function updateHeaderUser(userName) {
 
 async function initUserProfile() {
   const savedProfile = await getSetting('user-profile', 'Dad');
-  updateHeaderUser(savedProfile);
-  if (window.FamCalShifts) {
-    window.FamCalShifts.setCurrentUser(savedProfile);
-  }
-  if (userProfileSelect) {
-    userProfileSelect.value = savedProfile;
-    userProfileSelect.addEventListener('change', async () => {
-      const selected = userProfileSelect.value;
-      updateHeaderUser(selected);
-      if (window.FamCalShifts) {
-        window.FamCalShifts.setCurrentUser(selected);
+  const userDropdownBtn = document.getElementById('user-dropdown-btn');
+  const userDropdownMenu = document.getElementById('user-dropdown-menu');
+  const userDropdownDot = document.getElementById('user-dropdown-dot');
+  const userDropdownLabel = document.getElementById('user-dropdown-label');
+  const userDropdownGroup = document.getElementById('user-profile-dropdown');
+  const dropdownItems = document.querySelectorAll('.custom-dropdown-item');
+
+  const closeDropdown = () => {
+    if (userDropdownMenu) userDropdownMenu.classList.add('hidden');
+    if (userDropdownGroup) userDropdownGroup.classList.remove('is-open');
+    if (userDropdownBtn) userDropdownBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  const syncUserSelection = async (user) => {
+    if (userProfileSelect) {
+      userProfileSelect.value = user;
+    }
+    if (userDropdownDot) {
+      userDropdownDot.className = `member-dot dot-${(user || 'other').toLowerCase()}`;
+    }
+    if (userDropdownLabel) {
+      userDropdownLabel.textContent = user;
+    }
+    dropdownItems.forEach(item => {
+      const isMatch = item.getAttribute('data-user') === user;
+      item.classList.toggle('is-selected', isMatch);
+      item.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+    updateHeaderUser(user);
+    if (window.FamCalShifts) {
+      window.FamCalShifts.setCurrentUser(user);
+    }
+    await setSetting('user-profile', user);
+  };
+
+  await syncUserSelection(savedProfile);
+
+  if (userDropdownBtn && userDropdownMenu) {
+    userDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !userDropdownMenu.classList.contains('hidden');
+      if (isOpen) {
+        closeDropdown();
+      } else {
+        userDropdownMenu.classList.remove('hidden');
+        if (userDropdownGroup) userDropdownGroup.classList.add('is-open');
+        userDropdownBtn.setAttribute('aria-expanded', 'true');
       }
-      await setSetting('user-profile', selected);
+    });
+
+    dropdownItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const user = item.getAttribute('data-user');
+        if (user) {
+          syncUserSelection(user);
+        }
+        closeDropdown();
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (userDropdownGroup && !userDropdownGroup.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+  }
+
+  if (userProfileSelect) {
+    userProfileSelect.addEventListener('change', async () => {
+      syncUserSelection(userProfileSelect.value);
     });
   }
   if (headerUserTag) {

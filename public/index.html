@@ -8,17 +8,25 @@
   <meta name="apple-mobile-web-app-title" content="JustUs">
   <meta name="theme-color" content="#0f172a">
   <title>Just Us - Shared Family Schedule</title>
+  <link rel="icon" type="image/png" href="JustUs Icon.png">
+  <link rel="apple-touch-icon" href="JustUs Icon.png">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="splash-screen" class="splash-screen" aria-hidden="false">
+    <div class="splash-content">
+      <img src="JustUs Splash.png" alt="JustUs" class="splash-logo">
+    </div>
+  </div>
   <header class="app-header">
     <div class="header-inner">
-      <div class="header-title-group">
-        <h1 class="header-title">JustUs</h1>
-      </div>
       <div id="header-user-tag" class="header-user-tag" title="Current family member">
         <span id="header-user-name" class="header-user-name">Dad</span>
+      </div>
+      <div class="header-title-group">
+        <h1 class="header-title">JustUs</h1>
       </div>
       <div class="header-actions">
         <button id="menu-btn" class="icon-button icon-button-ghost" aria-label="Open Settings">
@@ -163,17 +171,60 @@
 
       <section class="settings-section">
         <h3 class="settings-section-title">Who Are You?</h3>
-        <div class="form-group">
-          <label for="user-profile-select" class="form-label">Default Family Member</label>
-          <select id="user-profile-select" class="form-input form-select" aria-label="Default Family Member">
-            <option value="Dad">🔵 Dad</option>
-            <option value="Mum">🟣 Mum</option>
-            <option value="Owen">🟢 Owen</option>
-            <option value="Liv">🟠 Liv</option>
-            <option value="Other">⚪ Other</option>
-          </select>
-          <span class="settings-hint">New events will default to this person on this device.</span>
+        <div class="custom-dropdown" id="user-profile-dropdown">
+          <button type="button" class="custom-dropdown-trigger form-input" id="user-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
+            <div class="custom-dropdown-selected">
+              <span id="user-dropdown-dot" class="member-dot dot-dad"></span>
+              <span id="user-dropdown-label" class="custom-dropdown-label">Dad</span>
+            </div>
+            <span class="material-symbols-rounded custom-dropdown-arrow">expand_more</span>
+          </button>
+          <div class="custom-dropdown-menu hidden" id="user-dropdown-menu" role="listbox" aria-label="Default Family Member">
+            <button type="button" class="custom-dropdown-item is-selected" data-user="Dad" role="option" aria-selected="true">
+              <div class="custom-dropdown-item-info">
+                <span class="member-dot dot-dad"></span>
+                <span class="custom-dropdown-item-name">Dad</span>
+              </div>
+              <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+            </button>
+            <button type="button" class="custom-dropdown-item" data-user="Mum" role="option" aria-selected="false">
+              <div class="custom-dropdown-item-info">
+                <span class="member-dot dot-mum"></span>
+                <span class="custom-dropdown-item-name">Mum</span>
+              </div>
+              <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+            </button>
+            <button type="button" class="custom-dropdown-item" data-user="Owen" role="option" aria-selected="false">
+              <div class="custom-dropdown-item-info">
+                <span class="member-dot dot-owen"></span>
+                <span class="custom-dropdown-item-name">Owen</span>
+              </div>
+              <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+            </button>
+            <button type="button" class="custom-dropdown-item" data-user="Liv" role="option" aria-selected="false">
+              <div class="custom-dropdown-item-info">
+                <span class="member-dot dot-liv"></span>
+                <span class="custom-dropdown-item-name">Liv</span>
+              </div>
+              <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+            </button>
+            <button type="button" class="custom-dropdown-item" data-user="Other" role="option" aria-selected="false">
+              <div class="custom-dropdown-item-info">
+                <span class="member-dot dot-other"></span>
+                <span class="custom-dropdown-item-name">Other</span>
+              </div>
+              <span class="material-symbols-rounded custom-dropdown-item-check">check</span>
+            </button>
+          </div>
         </div>
+        <select id="user-profile-select" class="settings-user-select-hidden" aria-hidden="true" tabindex="-1">
+          <option value="Dad">Dad</option>
+          <option value="Mum">Mum</option>
+          <option value="Owen">Owen</option>
+          <option value="Liv">Liv</option>
+          <option value="Other">Other</option>
+        </select>
+        <span class="settings-hint">New events will default to this person on this device.</span>
       </section>
 
       <section class="settings-section">
@@ -189,7 +240,7 @@
       </section>
 
       <div class="settings-version-footer">
-        <span class="settings-version-label">JustUs v2.10.0</span>
+        <span class="settings-version-label">JustUs v2.11.0</span>
       </div>
     </div>
   </aside>
@@ -244,7 +295,27 @@
     </div>
   </div>
 
+  <aside id="update-banner" class="update-banner hidden" role="alert" aria-hidden="true">
+    <div class="update-banner-card">
+      <div class="update-banner-info">
+        <span class="material-symbols-rounded update-banner-icon">system_update</span>
+        <div class="update-banner-text">
+          <span class="update-banner-title">Update Ready</span>
+          <span class="update-banner-desc">A newer version of JustUs is installed.</span>
+        </div>
+      </div>
+      <div class="update-banner-actions">
+        <button type="button" id="update-reload-btn" class="update-btn update-btn-primary">Restart</button>
+        <button type="button" id="update-dismiss-btn" class="update-btn update-btn-ghost" aria-label="Dismiss">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
   <script src="modules/shifts.js"></script>
+  <script src="modules/splash.js"></script>
+  <script src="modules/updater.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

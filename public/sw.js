@@ -1,10 +1,15 @@
-const CACHE_NAME = 'famcal-shell-v27';
+const CACHE_NAME = 'famcal-shell-v34';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
+  '/manifest.json',
   '/modules/shifts.js',
+  '/modules/splash.js',
+  '/modules/updater.js',
   '/app.js',
-  '/style.css'
+  '/style.css',
+  '/JustUs Splash.png',
+  '/JustUs Icon.png'
 ];
 
 self.addEventListener('install', (event) => {
