@@ -1,4 +1,4 @@
-const CACHE_NAME = 'famcal-shell-v41';
+const CACHE_NAME = 'famcal-shell-v42';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const SHELL_ASSETS = [
   '/modules/shifts.js',
   '/modules/splash.js',
   '/modules/updater.js',
+  '/modules/notifications.js',
   '/app.js',
   '/style.css',
   '/JustUs Splash.png',
@@ -50,6 +51,22 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request);
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
     })
   );
 });

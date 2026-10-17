@@ -227,6 +227,19 @@
       </section>
 
       <section class="settings-section">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <span class="settings-row-label">Event Reminders</span>
+            <span id="notification-status-text" class="settings-row-sub">Tap to enable reminders</span>
+          </div>
+          <button id="notification-toggle-btn" class="icon-button icon-button-ghost" aria-label="Toggle Reminders" title="Toggle Reminders">
+            <span class="material-symbols-rounded" id="notification-icon">notifications</span>
+          </button>
+        </div>
+        <button type="button" id="notification-test-btn" class="btn btn-secondary hidden">Send Test Reminder</button>
+      </section>
+
+      <section class="settings-section">
         <h3 class="settings-section-title">Who Are You?</h3>
         <div class="custom-dropdown" id="user-profile-dropdown">
           <button type="button" class="custom-dropdown-trigger form-input" id="user-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
@@ -373,6 +386,7 @@
   <script src="modules/shifts.js"></script>
   <script src="modules/splash.js"></script>
   <script src="modules/updater.js"></script>
+  <script src="modules/notifications.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

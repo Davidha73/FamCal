@@ -809,6 +809,9 @@ async function loadEvents() {
 
     renderCalendar();
     renderDayEvents();
+    if (window.FamCalNotifications) {
+      window.FamCalNotifications.checkUpcomingEvents(eventsState);
+    }
   } catch (error) {
     eventsCountSpan.textContent = 'Offline';
     calendarEventsContainer.innerHTML = `
@@ -1143,6 +1146,9 @@ window.addEventListener('load', async () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
       console.warn('Service worker registration failed:', err);
     });
+  }
+  if (window.FamCalNotifications) {
+    await window.FamCalNotifications.initNotifications();
   }
   loadEvents();
 });
