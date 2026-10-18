@@ -157,6 +157,42 @@
     evaluateUpcomingEvents();
   }
 
+  const VAPID_KEY = 'BDFLjRAMWYJxydptBw5XbcvZO9Q94pV7bI85u9zUgIs20Q7ghuPpc0kKsZC23T0yYaTPgrHUlEWNcmwx_1_w3g8';
+
+  async function registerFCMToken() {
+    if (typeof firebase === 'undefined' || !firebase.messaging || !('serviceWorker' in navigator)) return;
+    try {
+      const messaging = firebase.messaging();
+      const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const token = await messaging.getToken({
+        serviceWorkerRegistration: swReg,
+        vapidKey: VAPID_KEY
+      }).catch((err) => {
+        console.warn('FCM getToken error:', err);
+        return null;
+      });
+
+      if (token && firebase.firestore) {
+        const db = firebase.firestore();
+        const currentUser = localStorage.getItem('famcal-user-profile') || 'Dad';
+        await db.collection('fcm_tokens').doc(token).set({
+          token,
+          user: currentUser,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        console.log('FCM token synchronized for:', currentUser);
+      }
+
+      messaging.onMessage((payload) => {
+        const title = payload.notification?.title || 'JustUs Update';
+        const body = payload.notification?.body || '';
+        showNotification(title, { body });
+      });
+    } catch (err) {
+      console.warn('FCM registration error:', err.message);
+    }
+  }
+
   async function initNotifications() {
     if ('serviceWorker' in navigator) {
       try {
@@ -175,13 +211,19 @@
           showNotification('JustUs Reminders Active', {
             body: 'Reminders are scheduled for 1 hour before and at the start time of scheduled events.'
           });
+          registerFCMToken();
         } else {
-          await requestPermission();
+          const granted = await requestPermission();
+          if (granted) registerFCMToken();
         }
       });
     }
 
     updateUI();
+
+    if (Notification.permission === 'granted') {
+      registerFCMToken();
+    }
 
     if (!checkInterval) {
       checkInterval = setInterval(evaluateUpcomingEvents, 60000);
@@ -190,6 +232,7 @@
 
   window.FamCalNotifications = {
     initNotifications,
-    checkUpcomingEvents
+    checkUpcomingEvents,
+    registerFCMToken
   };
 })();

@@ -40,7 +40,8 @@
   </header>
 
   <main class="app-main">
-    <section class="calendar-card" aria-label="Calendar View">
+    <div id="calendar-view-container" class="view-container">
+      <section class="calendar-card" aria-label="Calendar View">
       <div class="calendar-top-bar">
         <div class="calendar-view-segmented" role="tablist" aria-label="Calendar View Selection">
           <button type="button" id="view-month-btn" class="segmented-btn is-active" role="tab" aria-selected="true">Month</button>
@@ -200,6 +201,56 @@
         <!-- Event cards will be dynamically injected here -->
       </div>
     </section>
+    </div>
+
+    <div id="noticeboard-view-container" class="view-container hidden">
+      <section class="noticeboard-card" aria-label="Family Noticeboard">
+        <div class="noticeboard-top-bar">
+          <div class="noticeboard-title-group">
+            <h2 class="noticeboard-title">Noticeboard</h2>
+            <span class="noticeboard-subtitle">Family messages & updates</span>
+          </div>
+          <button type="button" id="open-notice-modal-btn" class="btn btn-primary btn-add-notice" aria-label="Post Note">
+            <span class="material-symbols-rounded">add</span>
+            <span>Note</span>
+          </button>
+        </div>
+
+        <div class="feed-header">
+          <span class="feed-title">All Messages</span>
+          <span id="noticeboard-count" class="feed-counter">0 notes</span>
+        </div>
+
+        <div id="noticeboard-grid" class="noticeboard-grid">
+          <!-- Dynamic note cards injected here -->
+        </div>
+      </section>
+    </div>
+
+    <div id="messages-view-container" class="view-container hidden">
+      <section class="messages-card" aria-label="Family Messages">
+        <div class="messages-top-bar">
+          <div class="messages-title-group">
+            <h2 class="messages-title">Messages</h2>
+            <span class="messages-subtitle">Family chat & conversations</span>
+          </div>
+          <button type="button" id="messages-clear-btn" class="icon-button icon-button-ghost btn-clear-chat" aria-label="Clear all messages" title="Clear All Messages">
+            <span class="material-symbols-rounded">delete_sweep</span>
+          </button>
+        </div>
+
+        <div id="messages-feed" class="messages-feed">
+          <!-- Dynamic chat messages injected here -->
+        </div>
+
+        <form id="messages-compose-form" class="messages-compose-form" autocomplete="off">
+          <input type="text" id="messages-input" class="messages-input" placeholder="Message the family..." required maxlength="500">
+          <button type="submit" id="messages-send-btn" class="messages-send-btn" aria-label="Send message">
+            <span class="material-symbols-rounded">send</span>
+          </button>
+        </form>
+      </section>
+    </div>
   </main>
 
   <div id="settings-drawer-backdrop" class="drawer-backdrop hidden" aria-hidden="true"></div>
@@ -370,9 +421,95 @@
     </div>
   </aside>
 
+  <div id="notice-modal-backdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="notice-modal-title" class="modal-title">Post a Note</h2>
+          <span class="modal-subtitle">Share with the family</span>
+        </div>
+        <button type="button" id="notice-modal-close-btn" class="icon-button icon-button-ghost" aria-label="Close dialog">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <form id="notice-form" class="event-form" autocomplete="off">
+        <div class="form-group">
+          <label for="notice-text" class="form-label">Message</label>
+          <textarea id="notice-text" class="form-input form-textarea" placeholder="Type a note, reminder, or shoutout..." rows="3" required></textarea>
+        </div>
+
+        <div class="form-grid-two">
+          <div class="form-group">
+            <label for="notice-category" class="form-label">Category</label>
+            <select id="notice-category" class="form-input">
+              <option value="Note">📝 Note</option>
+              <option value="Reminder">⏰ Reminder</option>
+              <option value="Urgent">🚨 Urgent</option>
+              <option value="Shoutout">🎉 Shoutout</option>
+              <option value="Love">❤️ Love</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="notice-author" class="form-label">From</label>
+            <select id="notice-author" class="form-input">
+              <option value="Dad">Dad</option>
+              <option value="Mum">Mum</option>
+              <option value="Owen">Owen</option>
+              <option value="Liv">Liv</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group form-group-toggle">
+          <div class="toggle-info">
+            <span class="toggle-title">Pin to top</span>
+            <span class="toggle-subtitle">Keep this note pinned at the top</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notice-pinned" class="toggle-switch-input">
+            <span class="toggle-switch-track"></span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="notice-submit-btn" class="btn btn-primary">Post Note</button>
+          <button type="button" id="notice-modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <nav class="bottom-nav-bar" aria-label="Main Navigation">
+    <button type="button" id="tab-nav-calendar" class="bottom-nav-item is-active" role="tab" aria-selected="true">
+      <span class="material-symbols-rounded bottom-nav-icon">calendar_month</span>
+      <span class="bottom-nav-label">Calendar</span>
+    </button>
+    <button type="button" id="tab-nav-noticeboard" class="bottom-nav-item" role="tab" aria-selected="false">
+      <span class="bottom-nav-icon-wrapper">
+        <span class="material-symbols-rounded bottom-nav-icon">sticky_note_2</span>
+        <span id="noticeboard-badge" class="bottom-nav-badge hidden">0</span>
+      </span>
+      <span class="bottom-nav-label">Noticeboard</span>
+    </button>
+    <button type="button" id="tab-nav-messages" class="bottom-nav-item" role="tab" aria-selected="false">
+      <span class="bottom-nav-icon-wrapper">
+        <span class="material-symbols-rounded bottom-nav-icon">forum</span>
+        <span id="messages-badge" class="bottom-nav-badge hidden">0</span>
+      </span>
+      <span class="bottom-nav-label">Messages</span>
+    </button>
+  </nav>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+  <script src="modules/notifications.js"></script>
   <script src="modules/shifts.js"></script>
   <script src="modules/splash.js"></script>
   <script src="modules/updater.js"></script>
+  <script src="modules/noticeboard.js"></script>
+  <script src="modules/messages.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

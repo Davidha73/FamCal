@@ -1,9 +1,24 @@
-## [2026-10-17T22:23:35+01:00 / v2.24.0]
+## [2026-10-18T22:08:00+01:00 / v2.30.0]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Synchronized settings version footer to v2.24.0 and incremented service worker cache shell to trigger client update prompts.
+- **Status:** Configured Firebase Service Account credentials in `.env`, completing the end-to-end background push notification pipeline for both messages and noticeboard notes.
 - **Files Changed:**
-  - `public/index.html`
-  - `public/sw.js`
+  - `.env`
   - `memory.md`
-- **Next Objectives:** Verify PWA client updater prompt upon reload and monitor cached asset delivery.
+- **Next Objectives:** Test message dispatch and verify background lock-screen notifications on target devices.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

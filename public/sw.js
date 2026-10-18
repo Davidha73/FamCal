@@ -1,11 +1,14 @@
-const CACHE_NAME = 'famcal-shell-v45';
+const CACHE_NAME = 'famcal-shell-v48';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/modules/notifications.js',
   '/modules/shifts.js',
   '/modules/splash.js',
   '/modules/updater.js',
+  '/modules/noticeboard.js',
+  '/modules/messages.js',
   '/app.js',
   '/style.css',
   '/JustUs Splash.png',
