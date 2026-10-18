@@ -1,24 +1,8 @@
-## [2026-10-18T22:08:00+01:00 / v2.30.0]
+## [2026-10-18T22:30:00+01:00 / v2.30.2]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Configured Firebase Service Account credentials in `.env`, completing the end-to-end background push notification pipeline for both messages and noticeboard notes.
+- **Status:** Standardized bottom navigation bar to a compact 52px height across all views, eliminating excess padding and aligning Messages and Noticeboard seamlessly.
 - **Files Changed:**
-  - `.env`
+  - `public/style.css`
   - `memory.md`
-- **Next Objectives:** Test message dispatch and verify background lock-screen notifications on target devices.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- **Next Objectives:** Verify visual consistency of the bottom bar across iOS and Android mobile views.

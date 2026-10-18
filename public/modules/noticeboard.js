@@ -48,20 +48,43 @@
     return temp.innerHTML;
   }
 
+  const LAST_SEEN_KEY = 'famcal_noticeboard_last_seen';
+
+  function updateNoticeboardBadge(notes) {
+    const badge = document.getElementById('noticeboard-badge');
+    if (!badge) return;
+
+    const currentTab = localStorage.getItem('famcal-active-tab') || 'calendar';
+    if (currentTab === 'noticeboard') {
+      localStorage.setItem(LAST_SEEN_KEY, String(Date.now()));
+      badge.classList.add('hidden');
+      return;
+    }
+
+    const lastSeen = parseInt(localStorage.getItem(LAST_SEEN_KEY) || '0', 10);
+    const currentUser = getActiveUser().toLowerCase();
+
+    const unreadCount = notes.filter((note) => {
+      const author = (note.author || '').toLowerCase();
+      if (author === currentUser) return false;
+      const noteTime = note.createdAt?.toDate ? note.createdAt.toDate().getTime() : (note.createdAt ? new Date(note.createdAt).getTime() : 0);
+      return noteTime > lastSeen;
+    }).length;
+
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
   function renderNotes(notes) {
     const container = document.getElementById('noticeboard-grid');
-    const badge = document.getElementById('noticeboard-badge');
     const counter = document.getElementById('noticeboard-count');
     if (!container) return;
 
-    if (badge) {
-      if (notes.length > 0) {
-        badge.textContent = notes.length > 99 ? '99+' : notes.length;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    }
+    updateNoticeboardBadge(notes);
 
     if (counter) {
       counter.textContent = `${notes.length} ${notes.length === 1 ? 'note' : 'notes'}`;
@@ -332,6 +355,11 @@
         }
       });
       localStorage.setItem('famcal-active-tab', targetTab);
+      if (targetTab === 'noticeboard') {
+        localStorage.setItem(LAST_SEEN_KEY, String(Date.now()));
+        const badge = document.getElementById('noticeboard-badge');
+        if (badge) badge.classList.add('hidden');
+      }
       window.dispatchEvent(new CustomEvent('famcal-tab-changed', { detail: { tab: targetTab } }));
     };
 

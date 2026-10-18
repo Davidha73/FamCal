@@ -34,19 +34,42 @@
     return temp.innerHTML;
   }
 
+  const LAST_SEEN_MESSAGES_KEY = 'famcal_messages_last_seen';
+
+  function updateMessagesBadge(messages) {
+    const badge = document.getElementById('messages-badge');
+    if (!badge) return;
+
+    const currentTab = localStorage.getItem('famcal-active-tab') || 'calendar';
+    if (currentTab === 'messages') {
+      localStorage.setItem(LAST_SEEN_MESSAGES_KEY, String(Date.now()));
+      badge.classList.add('hidden');
+      return;
+    }
+
+    const lastSeen = parseInt(localStorage.getItem(LAST_SEEN_MESSAGES_KEY) || '0', 10);
+    const currentUser = getActiveUser().toLowerCase();
+
+    const unreadCount = messages.filter((msg) => {
+      const author = (msg.author || '').toLowerCase();
+      if (author === currentUser) return false;
+      const msgTime = msg.createdAt?.toDate ? msg.createdAt.toDate().getTime() : (msg.createdAt ? new Date(msg.createdAt).getTime() : 0);
+      return msgTime > lastSeen;
+    }).length;
+
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
   function renderMessages(messages) {
     const feed = document.getElementById('messages-feed');
-    const badge = document.getElementById('messages-badge');
     if (!feed) return;
 
-    if (badge) {
-      if (messages.length > 0) {
-        badge.textContent = messages.length > 99 ? '99+' : messages.length;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    }
+    updateMessagesBadge(messages);
 
     if (messages.length === 0) {
       feed.innerHTML = `
@@ -258,6 +281,10 @@
 
     window.addEventListener('famcal-tab-changed', (e) => {
       if (e.detail && e.detail.tab === 'messages') {
+        localStorage.setItem(LAST_SEEN_MESSAGES_KEY, String(Date.now()));
+        const badge = document.getElementById('messages-badge');
+        if (badge) badge.classList.add('hidden');
+
         const currentFeed = document.getElementById('messages-feed');
         if (currentFeed) {
           setTimeout(() => {
