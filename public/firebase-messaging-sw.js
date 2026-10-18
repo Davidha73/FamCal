@@ -1,30 +1,27 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB5a1wErBkuk3s7Jxs5rjIZmO22xERsW9s",
-  authDomain: "justus-5b537.firebaseapp.com",
-  projectId: "justus-5b537",
-  storageBucket: "justus-5b537.firebasestorage.app",
-  messagingSenderId: "903585819562",
-  appId: "1:903585819562:web:c6c82a841ba94e751599d3",
-  measurementId: "G-M2145HJRLC"
-};
-
-firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'JustUs Family Update';
-  const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || 'You have a new update in JustUs.',
-    icon: '/JustUs Icon.png',
-    badge: '/JustUs Icon.png',
-    data: payload.data?.url || '/'
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+fetch('/.netlify/functions/firebase-config')
+  .then((res) => res.json())
+  .then((config) => {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(config);
+    }
+    const messaging = firebase.messaging();
+    messaging.onBackgroundMessage((payload) => {
+      const notificationTitle = payload.notification?.title || payload.data?.title || 'JustUs Family Update';
+      const notificationOptions = {
+        body: payload.notification?.body || payload.data?.body || 'You have a new update in JustUs.',
+        icon: '/JustUs Icon.png',
+        badge: '/JustUs Icon.png',
+        data: payload.data?.url || '/'
+      };
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+  })
+  .catch((err) => {
+    console.warn('SW Firebase config fetch error:', err.message);
+  });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

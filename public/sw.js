@@ -1,8 +1,9 @@
-const CACHE_NAME = 'famcal-shell-v48';
+const CACHE_NAME = 'famcal-shell-v49';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/modules/firebase-init.js',
   '/modules/notifications.js',
   '/modules/shifts.js',
   '/modules/splash.js',

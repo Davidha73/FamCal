@@ -245,7 +245,7 @@ body {
   width: 100%;
   margin: 0 auto;
   padding: 16px;
-  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1539,13 +1539,15 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(52px + env(safe-area-inset-bottom, 0px));
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  max-height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background-color: var(--header-bg);
+  box-sizing: border-box;
+  background-color: var(--bg-secondary);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-color);
-  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -1884,7 +1886,7 @@ body {
 #messages-view-container {
   position: fixed;
   top: calc(64px + env(safe-area-inset-top, 0px));
-  bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   max-width: 640px;
@@ -2078,7 +2080,7 @@ body {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   color: var(--text-primary);
   outline: none;

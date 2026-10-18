@@ -1,16 +1,6 @@
 (() => {
   'use strict';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyB5a1wErBkuk3s7Jxs5rjIZmO22xERsW9s",
-    authDomain: "justus-5b537.firebaseapp.com",
-    projectId: "justus-5b537",
-    storageBucket: "justus-5b537.firebasestorage.app",
-    messagingSenderId: "903585819562",
-    appId: "1:903585819562:web:c6c82a841ba94e751599d3",
-    measurementId: "G-M2145HJRLC"
-  };
-
   let db = null;
   let unsubscribeNotes = null;
   let currentNotes = [];
@@ -373,16 +363,22 @@
     window.FamCalSwitchTab(savedTab);
   }
 
-  function initFirestore() {
-    if (typeof firebase === 'undefined') {
-      console.warn('Firebase SDK not loaded.');
-      return;
+  async function initFirestore() {
+    try {
+      if (typeof window.FamCalGetFirebase === 'function') {
+        const fb = await window.FamCalGetFirebase();
+        db = fb.db;
+      } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+        db = firebase.firestore();
+      }
+    } catch (err) {
+      console.warn('Firebase init error in Noticeboard:', err);
     }
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+    if (!db) {
+      console.warn('Firestore database unavailable.');
+      return;
     }
-    db = firebase.firestore();
 
     const grid = document.getElementById('noticeboard-grid');
     if (grid) {

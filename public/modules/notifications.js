@@ -157,16 +157,22 @@
     evaluateUpcomingEvents();
   }
 
-  const VAPID_KEY = 'BDFLjRAMWYJxydptBw5XbcvZO9Q94pV7bI85u9zUgIs20Q7ghuPpc0kKsZC23T0yYaTPgrHUlEWNcmwx_1_w3g8';
-
   async function registerFCMToken() {
     if (typeof firebase === 'undefined' || !firebase.messaging || !('serviceWorker' in navigator)) return;
     try {
+      let vapidKey = null;
+      if (typeof window.FamCalGetFirebase === 'function') {
+        try {
+          const fb = await window.FamCalGetFirebase();
+          vapidKey = fb.vapidKey;
+        } catch (_) {}
+      }
+
       const messaging = firebase.messaging();
       const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       const token = await messaging.getToken({
         serviceWorkerRegistration: swReg,
-        vapidKey: VAPID_KEY
+        ...(vapidKey ? { vapidKey } : {})
       }).catch((err) => {
         console.warn('FCM getToken error:', err);
         return null;
