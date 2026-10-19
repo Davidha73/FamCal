@@ -1,4 +1,4 @@
-const CACHE_NAME = 'famcal-shell-v57';
+const CACHE_NAME = 'famcal-shell-v62';
 const SHELL_ASSETS = [
   '/',
   '/index.html',

@@ -300,6 +300,20 @@
       </section>
 
       <section class="settings-section">
+        <h3 class="settings-section-title">Notifications</h3>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <span class="settings-row-label">Push Alerts</span>
+            <span id="notification-status-text" class="settings-row-sub">Tap to enable</span>
+          </div>
+          <button type="button" id="notification-toggle-btn" class="icon-button icon-button-ghost" aria-label="Toggle Notifications">
+            <span id="notification-icon" class="material-symbols-rounded">notifications</span>
+          </button>
+        </div>
+        <p id="notification-ios-hint" class="settings-hint notification-ios-hint hidden">On iPhone, tap Share &rarr; "Add to Home Screen" to enable iOS push notifications.</p>
+      </section>
+
+      <section class="settings-section">
         <h3 class="settings-section-title">Who Are You?</h3>
         <div class="custom-dropdown" id="user-profile-dropdown">
           <button type="button" class="custom-dropdown-trigger form-input" id="user-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">

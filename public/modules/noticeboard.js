@@ -108,6 +108,7 @@
       const authorClass = `user-${authorKey}`;
       const dotClass = `dot-${authorKey}`;
       const isPinned = Boolean(note.pinned);
+      const isCompleted = Boolean(note.completed);
       const isAuthor = (note.author || '').toLowerCase() === currentProfile.toLowerCase();
       const likedByMe = Array.isArray(note.likes) && note.likes.includes(currentProfile);
       const likesCount = Array.isArray(note.likes) ? note.likes.length : 0;
@@ -194,7 +195,7 @@
       }
 
       return `
-        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isList ? 'is-list-card' : ''}" data-note-id="${sanitizeHtml(note.id)}">
+        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isCompleted ? 'is-completed' : ''} ${isList ? 'is-list-card' : ''}" data-note-id="${sanitizeHtml(note.id)}">
           <header class="notice-card-header">
             <div class="notice-card-author">
               <span class="member-dot ${dotClass}" aria-hidden="true"></span>
@@ -212,6 +213,9 @@
               ${linkedHtml}
             </div>
             <div class="notice-footer-right">
+              <button type="button" class="btn-action btn-complete notice-complete-btn ${isCompleted ? 'is-completed' : ''}" data-action="toggle-complete" data-id="${sanitizeHtml(note.id)}" aria-label="${isCompleted ? 'Mark as incomplete' : 'Mark as completed'}" title="${isCompleted ? 'Completed' : 'Mark as completed'}">
+                <span class="material-symbols-rounded">${isCompleted ? 'check_circle' : 'radio_button_unchecked'}</span>
+              </button>
               <button type="button" class="notice-action-btn notice-like-btn ${likedByMe ? 'is-liked' : ''}" data-action="like" data-id="${sanitizeHtml(note.id)}" aria-label="Heart note">
                 <span class="material-symbols-rounded">${likedByMe ? 'favorite' : 'favorite_border'}</span>
                 <span class="notice-like-count">${likesCount > 0 ? likesCount : ''}</span>
@@ -390,6 +394,21 @@
     if (action === 'edit-note') {
       const note = currentNotes.find(n => n.id === noteId);
       if (note) openNoteModal(note);
+      return;
+    }
+
+    if (action === 'toggle-complete') {
+      const note = currentNotes.find(n => n.id === noteId);
+      const isCompleted = note ? Boolean(note.completed) : false;
+      try {
+        await db.collection('noticeboard_notes').doc(noteId).update({
+          completed: !isCompleted,
+          completedAt: !isCompleted ? firebase.firestore.FieldValue.serverTimestamp() : null,
+          completedBy: !isCompleted ? getActiveUser() : null
+        });
+      } catch (err) {
+        console.error('Failed to toggle completion:', err);
+      }
       return;
     }
 

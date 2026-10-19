@@ -53,9 +53,28 @@
     return result === 'granted';
   }
 
+  function isIos() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function isStandalone() {
+    return ('standalone' in window.navigator && window.navigator.standalone) ||
+           window.matchMedia('(display-mode: standalone)').matches;
+  }
+
   function updateUI() {
     const statusText = document.getElementById('notification-status-text');
     const notifIcon = document.getElementById('notification-icon');
+    const iosHint = document.getElementById('notification-ios-hint');
+
+    if (isIos() && !isStandalone()) {
+      if (iosHint) iosHint.classList.remove('hidden');
+      if (statusText) statusText.textContent = 'Add to Home Screen first';
+      if (notifIcon) notifIcon.textContent = 'install_mobile';
+      return;
+    } else {
+      if (iosHint) iosHint.classList.add('hidden');
+    }
 
     if (!('Notification' in window)) {
       if (statusText) statusText.textContent = 'Not supported on this browser';
@@ -65,13 +84,13 @@
 
     const permission = Notification.permission;
     if (permission === 'granted') {
-      if (statusText) statusText.textContent = 'Alerts 1hr before & at event';
+      if (statusText) statusText.textContent = 'Active (Messages & Events)';
       if (notifIcon) notifIcon.textContent = 'notifications_active';
     } else if (permission === 'denied') {
-      if (statusText) statusText.textContent = 'Blocked in device settings';
+      if (statusText) statusText.textContent = 'Blocked in iPhone Settings';
       if (notifIcon) notifIcon.textContent = 'notifications_off';
     } else {
-      if (statusText) statusText.textContent = 'Tap to enable reminders';
+      if (statusText) statusText.textContent = 'Tap to enable';
       if (notifIcon) notifIcon.textContent = 'notifications';
     }
   }
@@ -209,19 +228,33 @@
     const toggleBtn = document.getElementById('notification-toggle-btn');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', async () => {
+        if (isIos() && !isStandalone()) {
+          alert('On iPhone, push notifications require JustUs to be added to your Home Screen.\n\n1. Tap Safari\'s Share button (square with arrow up)\n2. Tap "Add to Home Screen"\n3. Open JustUs from your Home Screen and enable notifications in Settings.');
+          return;
+        }
+
         if (!('Notification' in window)) {
           alert('Notifications are not supported by this browser.');
           return;
         }
+
         if (Notification.permission === 'granted') {
-          showNotification('JustUs Reminders Active', {
-            body: 'Reminders are scheduled for 1 hour before and at the start time of scheduled events.'
+          showNotification('JustUs Notifications Active', {
+            body: 'You will receive alerts for new family messages and calendar events.'
           });
           registerFCMToken();
+        } else if (Notification.permission === 'denied') {
+          alert('Notifications are blocked in device settings. Open your iPhone Settings > Notifications > JustUs to allow notifications.');
         } else {
           const granted = await requestPermission();
-          if (granted) registerFCMToken();
+          if (granted) {
+            registerFCMToken();
+            showNotification('JustUs Notifications Enabled', {
+              body: 'Push alerts are now enabled for family messages and events.'
+            });
+          }
         }
+        updateUI();
       });
     }
 
@@ -241,4 +274,10 @@
     checkUpcomingEvents,
     registerFCMToken
   };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNotifications);
+  } else {
+    initNotifications();
+  }
 })();

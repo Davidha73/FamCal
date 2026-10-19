@@ -107,6 +107,47 @@
 
     const initialTab = localStorage.getItem(STORAGE_KEY) || 'calendar';
     switchTab(initialTab);
+    setupKeyboardHandling();
+  }
+
+  function setupKeyboardHandling() {
+    function isEditable(el) {
+      if (!el) return false;
+      const tag = el.tagName ? el.tagName.toLowerCase() : '';
+      return tag === 'input' || tag === 'textarea' || el.isContentEditable;
+    }
+
+    document.addEventListener('focusin', (e) => {
+      if (isEditable(e.target)) {
+        document.body.classList.add('keyboard-open');
+      }
+    });
+
+    document.addEventListener('focusout', (e) => {
+      if (isEditable(e.target)) {
+        setTimeout(() => {
+          const active = document.activeElement;
+          if (!isEditable(active)) {
+            document.body.classList.remove('keyboard-open');
+          }
+        }, 120);
+      }
+    });
+
+    if (window.visualViewport) {
+      const onViewportChange = () => {
+        const isShrunk = window.visualViewport.height < window.innerHeight - 120;
+        const active = document.activeElement;
+        if (isShrunk && isEditable(active)) {
+          document.body.classList.add('keyboard-open');
+        } else if (!isShrunk && !isEditable(active)) {
+          document.body.classList.remove('keyboard-open');
+        }
+      };
+
+      window.visualViewport.addEventListener('resize', onViewportChange);
+      window.visualViewport.addEventListener('scroll', onViewportChange);
+    }
   }
 
   if (document.readyState === 'loading') {
