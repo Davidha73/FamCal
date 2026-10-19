@@ -185,8 +185,11 @@
     evaluateUpcomingEvents();
   }
 
-  async function registerFCMToken() {
-    if (typeof firebase === 'undefined' || !firebase.messaging || !('serviceWorker' in navigator)) return;
+  async function registerFCMToken(showFeedback = false) {
+    if (typeof firebase === 'undefined' || !firebase.messaging || !('serviceWorker' in navigator)) {
+      if (showFeedback) alert('Firebase messaging or service worker is not supported in this browser window.');
+      return;
+    }
     try {
       let vapidKey = null;
       if (typeof window.FamCalGetFirebase === 'function') {
@@ -212,13 +215,17 @@
       }
 
       const messaging = firebase.messaging();
-      const token = await messaging.getToken({
-        serviceWorkerRegistration: swReg,
-        ...(vapidKey ? { vapidKey } : {})
-      }).catch((err) => {
+      let token = null;
+      let tokenError = null;
+      try {
+        token = await messaging.getToken({
+          serviceWorkerRegistration: swReg,
+          ...(vapidKey ? { vapidKey } : {})
+        });
+      } catch (err) {
+        tokenError = err;
         console.warn('FCM getToken error:', err);
-        return null;
-      });
+      }
 
       if (token) {
         currentDeviceToken = token;
@@ -226,9 +233,9 @@
           localStorage.setItem('famcal_fcm_token', token);
         } catch (_) {}
 
+        const currentUser = localStorage.getItem('famcal-user-profile') || 'Dad';
         if (firebase.firestore) {
           const db = firebase.firestore();
-          const currentUser = localStorage.getItem('famcal-user-profile') || 'Dad';
           await db.collection('fcm_tokens').doc(token).set({
             token,
             user: currentUser,
@@ -237,6 +244,11 @@
           console.log('FCM token synchronized for:', currentUser);
         }
         updateUI();
+        if (showFeedback) {
+          alert(`Success: Push token registered and saved in database for ${currentUser}!`);
+        }
+      } else if (showFeedback) {
+        alert('Could not obtain push token: ' + (tokenError ? tokenError.message : 'Unknown error. Make sure app is running from Home Screen.'));
       }
 
       messaging.onMessage((payload) => {
@@ -246,6 +258,7 @@
       });
     } catch (err) {
       console.warn('FCM registration error:', err.message);
+      if (showFeedback) alert('Registration error: ' + err.message);
     }
   }
 
@@ -268,7 +281,11 @@
         }
       }
       if (!currentDeviceToken) {
-        await registerFCMToken();
+        await registerFCMToken(false);
+      }
+      if (!currentDeviceToken) {
+        alert('No device token found on this iPhone yet. Tap the Push Alerts button above to register first.');
+        return;
       }
       const res = await fetch('/api/notify', {
         method: 'POST',
@@ -282,11 +299,7 @@
         })
       });
       const data = await res.json();
-      if (data.status === 'success') {
-        alert('Test notification sent! Exit or lock your phone to view the system banner.');
-      } else {
-        alert('Server response: ' + (data.message || JSON.stringify(data)));
-      }
+      alert(data.message || JSON.stringify(data));
     } catch (err) {
       alert('Failed to send test alert: ' + err.message);
     } finally {
@@ -321,13 +334,13 @@
           showNotification('JustUs Notifications Active', {
             body: 'You will receive alerts for new family messages and calendar events.'
           });
-          registerFCMToken();
+          registerFCMToken(true);
         } else if (Notification.permission === 'denied') {
           alert('Notifications are blocked in device settings. Open your iPhone Settings > Notifications > JustUs to allow notifications.');
         } else {
           const granted = await requestPermission();
           if (granted) {
-            registerFCMToken();
+            registerFCMToken(true);
             showNotification('JustUs Notifications Enabled', {
               body: 'Push alerts are now enabled for family messages and events.'
             });

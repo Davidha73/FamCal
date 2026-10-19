@@ -177,13 +177,53 @@ exports.handler = async (event) => {
       });
     });
 
+    if (documents.length === 0) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'no_tokens',
+          message: 'No registered device tokens found in Firestore. Tap the Push Alerts toggle on your phone to register it.'
+        })
+      };
+    }
+
     const results = await Promise.all(sendPromises);
     const validResults = results.filter(Boolean);
+    const successfulSends = validResults.filter(r => r.success);
+    const failedSends = validResults.filter(r => !r.success);
+
+    if (validResults.length === 0) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'skipped',
+          message: `Found ${documents.length} token(s) in database, but none matched (sender '${sender}' filtered out).`
+        })
+      };
+    }
+
+    if (successfulSends.length === 0) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'send_failed',
+          message: `Attempted delivery to ${validResults.length} device(s) but FCM failed: ${failedSends[0]?.error || 'Unknown error'}`
+        })
+      };
+    }
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'success', sentCount: documents.length })
+      body: JSON.stringify({
+        status: 'success',
+        sentCount: successfulSends.length,
+        totalTokens: documents.length,
+        message: `Delivered push to ${successfulSends.length} of ${documents.length} registered device(s).`
+      })
     };
   } catch (err) {
     console.error('Push notification dispatch error:', err);
