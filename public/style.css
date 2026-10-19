@@ -1533,7 +1533,9 @@ body {
   }
 }
 
-/* Bottom Navigation Bar */
+
+
+/* Universal Fixed Bottom Navigation Bar */
 .bottom-nav-bar {
   position: fixed;
   bottom: 0;
@@ -1541,6 +1543,7 @@ body {
   right: 0;
   height: calc(56px + env(safe-area-inset-bottom, 0px));
   max-height: calc(56px + env(safe-area-inset-bottom, 0px));
+  min-height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-sizing: border-box;
   background-color: var(--bg-secondary);
@@ -1551,7 +1554,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  z-index: 45;
+  z-index: 100;
   transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
@@ -1570,6 +1573,7 @@ body {
   cursor: pointer;
   transition: color 0.18s ease, transform 0.12s ease;
   user-select: none;
+  padding: 0;
 }
 
 .bottom-nav-item:active {

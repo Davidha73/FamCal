@@ -319,49 +319,13 @@
     });
   }
 
-  function setupTabs() {
-    const tabCalendar = document.getElementById('tab-nav-calendar');
-    const tabNoticeboard = document.getElementById('tab-nav-noticeboard');
-    const tabMessages = document.getElementById('tab-nav-messages');
-    const calendarView = document.getElementById('calendar-view-container');
-    const noticeboardView = document.getElementById('noticeboard-view-container');
-    const messagesView = document.getElementById('messages-view-container');
-
-    const tabs = [
-      { id: 'calendar', btn: tabCalendar, view: calendarView },
-      { id: 'noticeboard', btn: tabNoticeboard, view: noticeboardView },
-      { id: 'messages', btn: tabMessages, view: messagesView }
-    ];
-
-    window.FamCalSwitchTab = function(targetTab) {
-      tabs.forEach(tab => {
-        const isActive = tab.id === targetTab;
-        if (tab.btn) {
-          tab.btn.classList.toggle('is-active', isActive);
-          tab.btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        }
-        if (tab.view) {
-          tab.view.classList.toggle('hidden', !isActive);
-        }
-      });
-      localStorage.setItem('famcal-active-tab', targetTab);
-      if (targetTab === 'noticeboard') {
-        localStorage.setItem(LAST_SEEN_KEY, String(Date.now()));
-        const badge = document.getElementById('noticeboard-badge');
-        if (badge) badge.classList.add('hidden');
-      }
-      window.dispatchEvent(new CustomEvent('famcal-tab-changed', { detail: { tab: targetTab } }));
-    };
-
-    tabs.forEach(tab => {
-      if (tab.btn) {
-        tab.btn.addEventListener('click', () => window.FamCalSwitchTab(tab.id));
-      }
-    });
-
-    const savedTab = localStorage.getItem('famcal-active-tab') || 'calendar';
-    window.FamCalSwitchTab(savedTab);
-  }
+  window.addEventListener('famcal-tab-changed', (e) => {
+    if (e.detail && e.detail.tab === 'noticeboard') {
+      localStorage.setItem(LAST_SEEN_KEY, String(Date.now()));
+      const badge = document.getElementById('noticeboard-badge');
+      if (badge) badge.classList.add('hidden');
+    }
+  });
 
   async function initFirestore() {
     try {
@@ -447,7 +411,6 @@
   }
 
   function init() {
-    setupTabs();
     if (window.firebase) {
       initFirestore();
     } else {
