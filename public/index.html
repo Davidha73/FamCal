@@ -204,37 +204,43 @@
     </div>
 
     <div id="noticeboard-view-container" class="view-container hidden">
-      <section class="noticeboard-card" aria-label="Family Noticeboard">
+      <header class="noticeboard-card noticeboard-header-card" aria-label="Family Noticeboard Header">
         <div class="noticeboard-top-bar">
           <div class="noticeboard-title-group">
             <h2 class="noticeboard-title">Noticeboard</h2>
             <span class="noticeboard-subtitle">Family messages & updates</span>
           </div>
-          <button type="button" id="open-notice-modal-btn" class="btn btn-primary btn-add-notice" aria-label="Post Note">
-            <span class="material-symbols-rounded">add</span>
-            <span>Note</span>
-          </button>
-        </div>
-
-        <div class="feed-header">
-          <span class="feed-title">All Messages</span>
-          <span id="noticeboard-count" class="feed-counter">0 notes</span>
-        </div>
-
-        <div id="noticeboard-grid" class="noticeboard-grid">
-          <div class="empty-state noticeboard-empty">
-            <div class="noticeboard-empty-icon">
-              <span class="material-symbols-rounded">forum</span>
-            </div>
-            <p class="state-title">No messages yet</p>
-            <p class="state-text">Post a note, reminder, or shoutout for the family!</p>
-            <button type="button" class="btn btn-primary" id="noticeboard-empty-add-btn">
+          <div class="noticeboard-actions">
+            <button type="button" id="open-notice-modal-btn" class="btn btn-primary btn-add-notice" aria-label="Pin Note">
               <span class="material-symbols-rounded">add</span>
-              <span>Leave a Note</span>
+              <span>Pin Note</span>
+            </button>
+            <button type="button" id="open-list-modal-btn" class="btn btn-secondary btn-add-list" aria-label="Pin List">
+              <span class="material-symbols-rounded">checklist</span>
+              <span>Pin List</span>
             </button>
           </div>
         </div>
-      </section>
+
+        <div class="feed-header">
+          <span class="feed-title">All Pinned Items</span>
+          <span id="noticeboard-count" class="feed-counter">0 items</span>
+        </div>
+      </header>
+
+      <div id="noticeboard-grid" class="noticeboard-grid">
+        <div class="empty-state noticeboard-empty">
+          <div class="noticeboard-empty-icon">
+            <span class="material-symbols-rounded">forum</span>
+          </div>
+          <p class="state-title">No messages yet</p>
+          <p class="state-text">Pin a note, reminder, or shoutout for the family!</p>
+          <button type="button" class="btn btn-primary" id="noticeboard-empty-add-btn">
+            <span class="material-symbols-rounded">add</span>
+            <span>Pin a Note</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div id="messages-view-container" class="view-container hidden">
@@ -441,7 +447,7 @@
     <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title">
       <div class="modal-header">
         <div class="modal-title-group">
-          <h2 id="notice-modal-title" class="modal-title">Post a Note</h2>
+          <h2 id="notice-modal-title" class="modal-title">Pin a Note</h2>
           <span class="modal-subtitle">Share with the family</span>
         </div>
         <button type="button" id="notice-modal-close-btn" class="icon-button icon-button-ghost" aria-label="Close dialog">
@@ -449,6 +455,7 @@
         </button>
       </div>
       <form id="notice-form" class="event-form" autocomplete="off">
+        <input type="hidden" id="notice-edit-id" value="">
         <div class="form-group">
           <label for="notice-text" class="form-label">Message</label>
           <textarea id="notice-text" class="form-input form-textarea" placeholder="Type a note, reminder, or shoutout..." rows="3" required></textarea>
@@ -477,6 +484,13 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <label for="notice-linked-list" class="form-label">Link to a List (Optional)</label>
+          <select id="notice-linked-list" class="form-input">
+            <option value="">None (Standalone Note)</option>
+          </select>
+        </div>
+
         <div class="form-group form-group-toggle">
           <div class="toggle-info">
             <span class="toggle-title">Pin to top</span>
@@ -489,8 +503,88 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" id="notice-submit-btn" class="btn btn-primary">Post Note</button>
+          <button type="submit" id="notice-submit-btn" class="btn btn-primary">Pin Note</button>
           <button type="button" id="notice-modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="list-modal-backdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="list-modal-title">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="list-modal-title" class="modal-title">Pin a List</h2>
+          <span class="modal-subtitle">Share an interactive checklist</span>
+        </div>
+        <button type="button" id="list-modal-close-btn" class="icon-button icon-button-ghost" aria-label="Close dialog">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+      <form id="list-form" class="event-form" autocomplete="off">
+        <input type="hidden" id="list-edit-id" name="listEditId" value="">
+        <div class="form-group">
+          <label for="list-title" class="form-label">List Title</label>
+          <input type="text" id="list-title" class="form-input" placeholder="e.g. Weekly Groceries, Packing..." required>
+        </div>
+
+        <div class="form-group">
+          <div class="list-modal-items-header">
+            <label class="form-label">Checklist Items</label>
+            <button type="button" id="list-add-item-btn" class="btn-text-action">
+              <span class="material-symbols-rounded">add</span>
+              <span>Add Item</span>
+            </button>
+          </div>
+          <div id="list-items-container" class="list-modal-items-container">
+            <!-- Dynamic item rows injected here -->
+          </div>
+        </div>
+
+        <div class="form-grid-two">
+          <div class="form-group">
+            <label for="list-category" class="form-label">Category</label>
+            <select id="list-category" class="form-input">
+              <option value="Note">📝 General</option>
+              <option value="Reminder">⏰ Tasks</option>
+              <option value="Urgent">🚨 Important</option>
+              <option value="Shoutout">🎉 Fun</option>
+              <option value="Love">❤️ Family</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="list-author" class="form-label">From</label>
+            <select id="list-author" class="form-input">
+              <option value="Dad">Dad</option>
+              <option value="Mum">Mum</option>
+              <option value="Owen">Owen</option>
+              <option value="Liv">Liv</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="list-linked-note" class="form-label">Link to a Note (Optional)</label>
+          <select id="list-linked-note" class="form-input">
+            <option value="">None (Standalone List)</option>
+          </select>
+        </div>
+
+        <div class="form-group form-group-toggle">
+          <div class="toggle-info">
+            <span class="toggle-title">Pin to top</span>
+            <span class="toggle-subtitle">Keep this list pinned at the top</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="list-pinned" class="toggle-switch-input">
+            <span class="toggle-switch-track"></span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="list-submit-btn" class="btn btn-primary">Pin List</button>
+          <button type="button" id="list-modal-cancel-btn" class="btn btn-secondary">Cancel</button>
         </div>
       </form>
     </div>
@@ -529,6 +623,7 @@
   <script src="modules/splash.js"></script>
   <script src="modules/updater.js"></script>
   <script src="modules/navigation.js"></script>
+  <script src="modules/lists.js"></script>
   <script src="modules/noticeboard.js"></script>
   <script src="modules/messages.js"></script>
   <script src="app.js"></script>

@@ -677,18 +677,10 @@ function renderDayEvents() {
 
   dayEvents.forEach((evt) => {
     const card = document.createElement('article');
-    card.className = 'event-card';
-    card.dataset.id = evt.id;
-
     const member = getEventMember(evt);
-
-    const topRow = document.createElement('div');
-    topRow.className = 'event-top-row';
-
-    const memberBadge = document.createElement('span');
-    memberBadge.className = `member-badge badge-${member.toLowerCase()}`;
-    memberBadge.textContent = member;
-    topRow.appendChild(memberBadge);
+    const memberKey = (member || 'other').toLowerCase();
+    card.className = `event-card member-border-${memberKey}`;
+    card.dataset.id = evt.id;
 
     const rawStart = evt.start?.dateTime || evt.start?.date || '';
     const rawEnd = evt.end?.dateTime || evt.end?.date || '';
@@ -731,7 +723,6 @@ function renderDayEvents() {
     bottomRow.appendChild(timeEl);
     bottomRow.appendChild(actionsRow);
 
-    card.appendChild(topRow);
     card.appendChild(titleEl);
     card.appendChild(bottomRow);
 
@@ -958,7 +949,8 @@ eventForm.addEventListener('submit', async (e) => {
   }
 
   const cleanSummary = summary.replace(/^\[?(Dad|Mum|Owen|Liv|Olivia|Other)\]?\s*-\s*/i, '').trim();
-  const prefixedSummary = `${member} - ${cleanSummary}`;
+  const isOther = (member || '').toLowerCase() === 'other';
+  const prefixedSummary = isOther ? cleanSummary : `${member} - ${cleanSummary}`;
 
   localStorage.setItem('famcal-member-pref', member);
 

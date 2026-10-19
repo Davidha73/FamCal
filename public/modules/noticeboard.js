@@ -77,7 +77,7 @@
     updateNoticeboardBadge(notes);
 
     if (counter) {
-      counter.textContent = `${notes.length} ${notes.length === 1 ? 'note' : 'notes'}`;
+      counter.textContent = `${notes.length} ${notes.length === 1 ? 'item' : 'items'}`;
     }
 
     if (notes.length === 0) {
@@ -87,10 +87,10 @@
             <span class="material-symbols-rounded">forum</span>
           </div>
           <p class="state-title">No messages yet</p>
-          <p class="state-text">Post a note, reminder, or shoutout for the family!</p>
+          <p class="state-text">Pin a note, reminder, or shoutout for the family!</p>
           <button type="button" class="btn btn-primary" id="noticeboard-empty-add-btn">
             <span class="material-symbols-rounded">add</span>
-            <span>Leave a Note</span>
+            <span>Pin a Note</span>
           </button>
         </div>
       `;
@@ -104,19 +104,97 @@
     const currentProfile = getActiveUser();
 
     container.innerHTML = notes.map(note => {
-      const authorClass = `user-${(note.author || 'other').toLowerCase()}`;
-      const dotClass = `dot-${(note.author || 'other').toLowerCase()}`;
+      const authorKey = (note.author || 'other').toLowerCase();
+      const authorClass = `user-${authorKey}`;
+      const dotClass = `dot-${authorKey}`;
       const isPinned = Boolean(note.pinned);
       const isAuthor = (note.author || '').toLowerCase() === currentProfile.toLowerCase();
       const likedByMe = Array.isArray(note.likes) && note.likes.includes(currentProfile);
       const likesCount = Array.isArray(note.likes) ? note.likes.length : 0;
-      const category = note.category || 'Note';
-      const categoryIcon = CATEGORY_ICONS[category] || '📝';
-      const categoryLabel = `${categoryIcon} ${category}`;
+      const isList = note.type === 'list';
+      const category = note.category || (isList ? 'List' : 'Note');
+      const categoryIcon = isList ? '📋' : (CATEGORY_ICONS[category] || '📝');
+      const categoryLabel = isList ? '📋 List' : `${categoryIcon} ${category}`;
       const timeStr = note.createdAt ? formatRelativeTime(note.createdAt.toDate ? note.createdAt.toDate() : new Date(note.createdAt)) : 'Just now';
+      let isCollapsed = false;
+      if (isList) {
+        try {
+          const stored = JSON.parse(localStorage.getItem('famcal-collapsed-lists') || '[]');
+          isCollapsed = Array.isArray(stored) && stored.includes(note.id);
+        } catch (_) {}
+      }
+
+      let linkedHtml = '';
+      if (note.linkedListId) {
+        const linked = notes.find(n => n.id === note.linkedListId);
+        if (linked) {
+          linkedHtml = `
+            <div class="notice-linked-row">
+              <button type="button" class="notice-linked-pill" data-scroll-to="${sanitizeHtml(linked.id)}" title="Jump to linked list">
+                <span class="material-symbols-rounded">checklist</span>
+                <span class="notice-linked-text">Linked List: ${sanitizeHtml(linked.title || 'Checklist')}</span>
+              </button>
+            </div>
+          `;
+        }
+      } else if (note.linkedNoteId) {
+        const linked = notes.find(n => n.id === note.linkedNoteId);
+        if (linked) {
+          const preview = linked.text ? (linked.text.slice(0, 30) + '...') : 'Note';
+          linkedHtml = `
+            <div class="notice-linked-row">
+              <button type="button" class="notice-linked-pill" data-scroll-to="${sanitizeHtml(linked.id)}" title="Jump to linked note">
+                <span class="material-symbols-rounded">sticky_note_2</span>
+                <span class="notice-linked-text">Linked Note: ${sanitizeHtml(preview)}</span>
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      let contentHtml = '';
+
+      if (isList) {
+        const items = note.items || [];
+        const doneCount = items.filter(it => it.done).length;
+        const totalCount = items.length;
+
+        contentHtml = `
+          <div class="list-card-content">
+            <div class="list-card-title-row">
+              <div class="list-title-left">
+                <button type="button" class="icon-button icon-button-ghost list-collapse-btn" data-list-id="${sanitizeHtml(note.id)}" aria-label="Toggle list collapse" aria-expanded="${isCollapsed ? 'false' : 'true'}" title="${isCollapsed ? 'Expand list' : 'Collapse list'}">
+                  <span class="material-symbols-rounded">${isCollapsed ? 'expand_more' : 'expand_less'}</span>
+                </button>
+                <h3 class="list-card-title">${sanitizeHtml(note.title || 'Checklist')}</h3>
+              </div>
+              <span class="list-progress-pill">${doneCount}/${totalCount} done</span>
+            </div>
+            <div class="list-collapsible-body ${isCollapsed ? 'is-collapsed' : ''}">
+              <ul class="list-items-checklist">
+                ${items.map(it => `
+                  <li class="list-checklist-item ${it.done ? 'is-done' : ''}">
+                    <label class="list-checkbox-label">
+                      <input type="checkbox" class="list-checkbox-input" data-list-id="${sanitizeHtml(note.id)}" data-item-id="${sanitizeHtml(it.id)}" ${it.done ? 'checked' : ''}>
+                      <span class="list-checkbox-custom"></span>
+                      <span class="list-item-text">${sanitizeHtml(it.text)}</span>
+                    </label>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+      } else {
+        contentHtml = `
+          <div class="notice-card-body">
+            <p class="notice-card-text">${sanitizeHtml(note.text)}</p>
+          </div>
+        `;
+      }
 
       return `
-        <article class="notice-card ${isPinned ? 'is-pinned' : ''}" data-note-id="${sanitizeHtml(note.id)}">
+        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isList ? 'is-list-card' : ''}" data-note-id="${sanitizeHtml(note.id)}">
           <header class="notice-card-header">
             <div class="notice-card-author">
               <span class="member-dot ${dotClass}" aria-hidden="true"></span>
@@ -124,21 +202,31 @@
               <span class="notice-timestamp">${sanitizeHtml(timeStr)}</span>
             </div>
             <div class="notice-card-badges">
-              <span class="notice-category-tag category-${category.toLowerCase()}">${sanitizeHtml(categoryLabel)}</span>
+              <span class="notice-category-tag category-${isList ? 'list' : category.toLowerCase()}">${sanitizeHtml(categoryLabel)}</span>
               ${isPinned ? '<span class="notice-pin-indicator" title="Pinned note"><span class="material-symbols-rounded">push_pin</span></span>' : ''}
             </div>
           </header>
-          <div class="notice-card-body">
-            <p class="notice-card-text">${sanitizeHtml(note.text)}</p>
-          </div>
+          ${contentHtml}
           <footer class="notice-card-footer">
-            <button type="button" class="notice-action-btn notice-like-btn ${likedByMe ? 'is-liked' : ''}" data-action="like" data-id="${sanitizeHtml(note.id)}" aria-label="Heart note">
-              <span class="material-symbols-rounded">${likedByMe ? 'favorite' : 'favorite_border'}</span>
-              <span class="notice-like-count">${likesCount > 0 ? likesCount : ''}</span>
-            </button>
+            <div class="notice-footer-left">
+              ${linkedHtml}
+            </div>
             <div class="notice-footer-right">
+              <button type="button" class="notice-action-btn notice-like-btn ${likedByMe ? 'is-liked' : ''}" data-action="like" data-id="${sanitizeHtml(note.id)}" aria-label="Heart note">
+                <span class="material-symbols-rounded">${likedByMe ? 'favorite' : 'favorite_border'}</span>
+                <span class="notice-like-count">${likesCount > 0 ? likesCount : ''}</span>
+              </button>
+              ${isList ? `
+                <button type="button" class="btn-action btn-edit notice-edit-btn list-edit-btn" data-action="edit-list" data-id="${sanitizeHtml(note.id)}" aria-label="Edit list" title="Edit list">
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+              ` : (isAuthor ? `
+                <button type="button" class="btn-action btn-edit notice-edit-btn note-edit-btn" data-action="edit-note" data-id="${sanitizeHtml(note.id)}" aria-label="Edit note" title="Edit note">
+                  <span class="material-symbols-rounded">edit</span>
+                </button>
+              ` : '')}
               ${isAuthor ? `
-                <button type="button" class="notice-action-btn notice-delete-btn" data-action="delete" data-id="${sanitizeHtml(note.id)}" aria-label="Delete note">
+                <button type="button" class="btn-action btn-delete notice-delete-btn" data-action="delete" data-id="${sanitizeHtml(note.id)}" aria-label="${isList ? 'Delete list' : 'Delete note'}" title="Delete">
                   <span class="material-symbols-rounded">delete</span>
                 </button>
               ` : ''}
@@ -149,19 +237,45 @@
     }).join('');
   }
 
-  function openNoteModal() {
+  function openNoteModal(noteToEdit) {
     const modal = document.getElementById('notice-modal-backdrop');
     const form = document.getElementById('notice-form');
+    const titleEl = document.getElementById('notice-modal-title');
+    const submitBtn = document.getElementById('notice-submit-btn');
     const authorSelect = document.getElementById('notice-author');
+    const textInput = document.getElementById('notice-text');
+    const categorySelect = document.getElementById('notice-category');
+    const pinnedCheckbox = document.getElementById('notice-pinned');
+    const editIdInput = document.getElementById('notice-edit-id');
+    const linkSelect = document.getElementById('notice-linked-list');
     if (!modal) return;
 
     if (form) form.reset();
-    if (authorSelect) {
-      authorSelect.value = getActiveUser();
+
+    const availableLists = currentNotes.filter(n => n.type === 'list');
+    if (linkSelect) {
+      linkSelect.innerHTML = '<option value="">None (Standalone Note)</option>' +
+        availableLists.map(l => `<option value="${l.id}">📋 ${sanitizeHtml(l.title || 'Checklist')}</option>`).join('');
     }
+
+    if (noteToEdit && noteToEdit.id) {
+      if (titleEl) titleEl.textContent = 'Edit Note';
+      if (submitBtn) submitBtn.textContent = 'Save Changes';
+      if (editIdInput) editIdInput.value = noteToEdit.id;
+      if (textInput) textInput.value = noteToEdit.text || '';
+      if (categorySelect) categorySelect.value = noteToEdit.category || 'Note';
+      if (authorSelect) authorSelect.value = noteToEdit.author || getActiveUser();
+      if (pinnedCheckbox) pinnedCheckbox.checked = Boolean(noteToEdit.pinned);
+      if (linkSelect) linkSelect.value = noteToEdit.linkedListId || '';
+    } else {
+      if (titleEl) titleEl.textContent = 'Pin a Note';
+      if (submitBtn) submitBtn.textContent = 'Pin Note';
+      if (editIdInput) editIdInput.value = '';
+      if (authorSelect) authorSelect.value = getActiveUser();
+    }
+
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
-    const textInput = document.getElementById('notice-text');
     if (textInput) {
       setTimeout(() => textInput.focus(), 100);
     }
@@ -169,7 +283,13 @@
 
   function closeNoteModal() {
     const modal = document.getElementById('notice-modal-backdrop');
+    const titleEl = document.getElementById('notice-modal-title');
+    const submitBtn = document.getElementById('notice-submit-btn');
+    const editIdInput = document.getElementById('notice-edit-id');
     if (!modal) return;
+    if (titleEl) titleEl.textContent = 'Pin a Note';
+    if (submitBtn) submitBtn.textContent = 'Pin Note';
+    if (editIdInput) editIdInput.value = '';
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
   }
@@ -185,48 +305,77 @@
     const categorySelect = document.getElementById('notice-category');
     const authorSelect = document.getElementById('notice-author');
     const pinnedCheckbox = document.getElementById('notice-pinned');
+    const linkSelect = document.getElementById('notice-linked-list');
     const submitBtn = document.getElementById('notice-submit-btn');
 
     const text = textInput ? textInput.value.trim() : '';
     const category = categorySelect ? categorySelect.value : 'Note';
     const author = authorSelect ? authorSelect.value : getActiveUser();
     const pinned = pinnedCheckbox ? pinnedCheckbox.checked : false;
+    const linkedListId = linkSelect ? linkSelect.value : '';
+
+    const editIdInput = document.getElementById('notice-edit-id');
+    const editId = editIdInput ? editIdInput.value.trim() : '';
 
     if (!text) return;
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Posting...';
+      submitBtn.textContent = editId ? 'Saving...' : 'Pinning...';
     }
 
     try {
-      await db.collection('noticeboard_notes').add({
-        text,
-        category,
-        author,
-        pinned,
-        likes: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      if (editId) {
+        await db.collection('noticeboard_notes').doc(editId).update({
+          text,
+          category,
+          author,
+          pinned,
+          linkedListId: linkedListId || null
+        });
 
-      fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: `${author} posted a ${category}`,
-          body: text,
-          sender: author
-        })
-      }).catch(() => {});
+        if (linkedListId) {
+          db.collection('noticeboard_notes').doc(linkedListId).update({
+            linkedNoteId: editId
+          }).catch(err => console.warn('Failed to update bidirectional list link:', err));
+        }
+      } else {
+        const docRef = await db.collection('noticeboard_notes').add({
+          type: 'note',
+          text,
+          category,
+          author,
+          pinned,
+          linkedListId: linkedListId || null,
+          likes: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        if (linkedListId) {
+          db.collection('noticeboard_notes').doc(linkedListId).update({
+            linkedNoteId: docRef.id
+          }).catch(err => console.warn('Failed to update bidirectional list link:', err));
+        }
+
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `${author} pinned a ${category}`,
+            body: text,
+            sender: author
+          })
+        }).catch(() => {});
+      }
 
       closeNoteModal();
     } catch (err) {
-      console.error('Error adding notice:', err);
-      alert('Could not post notice: ' + (err.message || 'Unknown error'));
+      console.error('Error saving notice:', err);
+      alert('Could not save notice: ' + (err.message || 'Unknown error'));
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Post Note';
+        submitBtn.textContent = editId ? 'Save Changes' : 'Pin Note';
       }
     }
   }
@@ -237,6 +386,12 @@
     const action = btn.dataset.action;
     const noteId = btn.dataset.id;
     if (!action || !noteId) return;
+
+    if (action === 'edit-note') {
+      const note = currentNotes.find(n => n.id === noteId);
+      if (note) openNoteModal(note);
+      return;
+    }
 
     if (action === 'like') {
       const currentProfile = getActiveUser();
@@ -410,6 +565,13 @@
         if (e.target === modalBackdrop) closeNoteModal();
       });
     }
+
+    window.addEventListener('famcal-firebase-ready', (e) => {
+      if (e.detail && e.detail.db) {
+        db = e.detail.db;
+        initFirestore();
+      }
+    });
   }
 
   function init() {
@@ -429,4 +591,6 @@
   } else {
     init();
   }
+
+  window.FamCalGetNotes = () => currentNotes;
 })();

@@ -9,6 +9,17 @@
   const STORAGE_KEY = 'famcal_firebase_cfg';
   let initPromise = null;
 
+  const FALLBACK_CONFIG = {
+    apiKey: 'AIzaSyB5a1wErBkuk3s7Jxs5rjIZmO22xERsW9s',
+    authDomain: 'justus-5b537.firebaseapp.com',
+    projectId: 'justus-5b537',
+    storageBucket: 'justus-5b537.firebasestorage.app',
+    messagingSenderId: '903585819562',
+    appId: '1:903585819562:web:c6c82a841ba94e751599d3',
+    measurementId: 'G-M2145HJRLC',
+    vapidKey: 'BDFLjRAMWYJxydptBw5XbcvZO9Q94pV7bI85u9zUgIs20Q7ghuPpc0kKsZC23T0yYaTPgrHUlEWNcmwx_1_w3g8'
+  };
+
   async function fetchConfig() {
     // 1. Try cached config first for fast startup
     try {
@@ -16,29 +27,40 @@
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed && parsed.apiKey && parsed.projectId) {
-          // Asynchronously refresh in the background
           refreshConfigInBackground();
           return parsed;
         }
       }
     } catch (_) {}
 
-    // 2. Fetch fresh config from Netlify function
-    const res = await fetch('/.netlify/functions/firebase-config');
-    if (!res.ok) throw new Error(`Firebase config request failed: ${res.status}`);
-    const config = await res.json();
-    if (!config || !config.apiKey) throw new Error('Invalid Firebase config received');
-
+    // 2. Fetch fresh config from Netlify endpoints with fallback
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    } catch (_) {}
+      let res = await fetch('/api/firebase-config');
+      if (!res.ok) {
+        res = await fetch('/.netlify/functions/firebase-config');
+      }
+      if (res.ok) {
+        const config = await res.json();
+        if (config && config.apiKey) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+          } catch (_) {}
+          return config;
+        }
+      }
+    } catch (err) {
+      console.warn('Network config fetch failed, using fallback config:', err.message);
+    }
 
-    return config;
+    return FALLBACK_CONFIG;
   }
 
   async function refreshConfigInBackground() {
     try {
-      const res = await fetch('/.netlify/functions/firebase-config');
+      let res = await fetch('/api/firebase-config');
+      if (!res.ok) {
+        res = await fetch('/.netlify/functions/firebase-config');
+      }
       if (res.ok) {
         const config = await res.json();
         if (config && config.apiKey) {

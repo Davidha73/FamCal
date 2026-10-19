@@ -105,11 +105,42 @@
     feed.scrollTop = feed.scrollHeight;
   }
 
+  async function ensureDb() {
+    if (db) return db;
+    if (window.FamCalFirebaseInstance && window.FamCalFirebaseInstance.db) {
+      db = window.FamCalFirebaseInstance.db;
+      return db;
+    }
+    if (typeof window.FamCalGetFirebase === 'function') {
+      try {
+        const fb = await window.FamCalGetFirebase();
+        if (fb && fb.db) {
+          db = fb.db;
+          return db;
+        }
+      } catch (err) {
+        console.warn('ensureDb failed:', err);
+      }
+    }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+      try {
+        db = firebase.firestore();
+        return db;
+      } catch (_) {}
+    }
+    return null;
+  }
+
   async function handleSendMessage(e) {
     e.preventDefault();
-    if (!db) {
+    const database = await ensureDb();
+    if (!database) {
       alert('Messaging is still connecting. Please try again.');
       return;
+    }
+
+    if (!unsubscribeMessages) {
+      initFirestore();
     }
 
     const input = document.getElementById('messages-input');
@@ -120,7 +151,7 @@
     if (sendBtn) sendBtn.disabled = true;
 
     try {
-      await db.collection('family_messages').add({
+      await database.collection('family_messages').add({
         text,
         author: getActiveUser(),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -198,7 +229,9 @@
 
   async function handleMessageActions(e) {
     const btn = e.target.closest('button[data-action="delete-message"]');
-    if (!btn || !db) return;
+    if (!btn) return;
+    const database = await ensureDb();
+    if (!database) return;
     const msgId = btn.dataset.id;
     if (!msgId) return;
 
@@ -210,7 +243,7 @@
     if (!confirmed) return;
 
     try {
-      await db.collection('family_messages').doc(msgId).delete();
+      await database.collection('family_messages').doc(msgId).delete();
     } catch (err) {
       console.error('Failed to delete message:', err);
       alert('Could not delete message: ' + (err.message || 'Unknown error'));
@@ -218,7 +251,8 @@
   }
 
   async function handleClearAllMessages() {
-    if (!db) return;
+    const database = await ensureDb();
+    if (!database) return;
     const confirmed = await showConfirmModal({
       title: 'Clear All Messages?',
       message: 'Are you sure you want to clear the entire family chat? This cannot be undone.',
@@ -230,10 +264,10 @@
     if (clearBtn) clearBtn.disabled = true;
 
     try {
-      const snapshot = await db.collection('family_messages').get();
+      const snapshot = await database.collection('family_messages').get();
       if (snapshot.empty) return;
 
-      const batch = db.batch();
+      const batch = database.batch();
       snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
       });
@@ -247,16 +281,7 @@
   }
 
   async function initFirestore() {
-    try {
-      if (typeof window.FamCalGetFirebase === 'function') {
-        const fb = await window.FamCalGetFirebase();
-        db = fb.db;
-      } else if (typeof firebase !== 'undefined' && firebase.firestore) {
-        db = firebase.firestore();
-      }
-    } catch (err) {
-      console.warn('Firebase init error in Messages:', err);
-    }
+    await ensureDb();
 
     if (!db) {
       console.warn('Firestore database unavailable for Messages.');
@@ -266,11 +291,15 @@
     if (unsubscribeMessages) unsubscribeMessages();
 
     unsubscribeMessages = db.collection('family_messages')
-      .orderBy('createdAt', 'asc')
       .onSnapshot((snapshot) => {
         const messages = [];
         snapshot.forEach((doc) => {
           messages.push({ id: doc.id, ...doc.data() });
+        });
+        messages.sort((a, b) => {
+          const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+          const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+          return timeA - timeB;
         });
         renderMessages(messages);
       }, (err) => {
@@ -303,6 +332,13 @@
       clearBtn.addEventListener('click', handleClearAllMessages);
     }
 
+    window.addEventListener('famcal-firebase-ready', (e) => {
+      if (e.detail && e.detail.db) {
+        db = e.detail.db;
+        initFirestore();
+      }
+    });
+
     window.addEventListener('famcal-tab-changed', (e) => {
       if (e.detail && e.detail.tab === 'messages') {
         localStorage.setItem(LAST_SEEN_MESSAGES_KEY, String(Date.now()));
@@ -315,6 +351,9 @@
             currentFeed.scrollTop = currentFeed.scrollHeight;
           }, 60);
         }
+        if (!db) {
+          initFirestore();
+        }
       }
     });
   }
@@ -322,13 +361,10 @@
   function init() {
     setupDomEvents();
     renderMessages([]);
-    if (window.firebase) {
-      initFirestore();
-    } else {
-      window.addEventListener('load', () => {
-        if (window.firebase) initFirestore();
-      });
-    }
+    initFirestore();
+    window.addEventListener('load', () => {
+      if (!db) initFirestore();
+    });
   }
 
   if (document.readyState === 'loading') {
