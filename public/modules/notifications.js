@@ -1,3 +1,5 @@
+// JustUs - Event Notifications Module
+(function () {
   let swRegistration = null;
   let cachedEvents = [];
   let checkInterval = null;
@@ -85,25 +87,20 @@
     }
 
     const permission = Notification.permission;
-    const testRow = document.getElementById('notification-test-row');
 
     if (permission === 'granted') {
       if (currentDeviceToken) {
         if (statusText) statusText.textContent = 'Active (Push Connected)';
-        if (testRow) testRow.classList.remove('hidden');
       } else {
         if (statusText) statusText.textContent = 'Active (Messages & Events)';
-        if (testRow) testRow.classList.remove('hidden');
       }
       if (notifIcon) notifIcon.textContent = 'notifications_active';
     } else if (permission === 'denied') {
       if (statusText) statusText.textContent = 'Blocked in iPhone Settings';
       if (notifIcon) notifIcon.textContent = 'notifications_off';
-      if (testRow) testRow.classList.add('hidden');
     } else {
       if (statusText) statusText.textContent = 'Tap to enable';
       if (notifIcon) notifIcon.textContent = 'notifications';
-      if (testRow) testRow.classList.add('hidden');
     }
   }
 
@@ -259,6 +256,17 @@
       testBtn.textContent = 'Sending...';
     }
     try {
+      if (!('Notification' in window)) {
+        alert('Notifications are not supported by this browser.');
+        return;
+      }
+      if (Notification.permission !== 'granted') {
+        const granted = await requestPermission();
+        if (!granted) {
+          alert('Notification permission is required to send a test alert.');
+          return;
+        }
+      }
       if (!currentDeviceToken) {
         await registerFCMToken();
       }

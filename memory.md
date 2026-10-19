@@ -1,12 +1,9 @@
-## [2026-10-19T22:57:15+01:00 / v2.30.30]
+## [2026-10-19T23:02:50+01:00 / v2.30.32]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Integrated Apple iOS WebPush headers (`Urgency: high`), full service worker activation gating for FCM tokens, and an interactive "Test Push" diagnostic button in the Settings drawer.
+- **Status:** Resolved syntax error in `notifications.js` by restoring missing IIFE opening declaration, unblocking button event binding, and bumped cache to v67.
 - **Files Changed:**
-  - `netlify/functions/notify.js`
   - `public/modules/notifications.js`
-  - `public/index.html`
-  - `public/style.css`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Re-open JustUs on iPhone, navigate to Settings, and tap the new 'Test' button to verify instant push delivery.
+- **Next Objectives:** Reload the app on iPhone and tap "Test" or "Push Alerts" to execute the notification triggers.
