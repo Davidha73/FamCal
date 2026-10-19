@@ -222,7 +222,17 @@
         </div>
 
         <div id="noticeboard-grid" class="noticeboard-grid">
-          <!-- Dynamic note cards injected here -->
+          <div class="empty-state noticeboard-empty">
+            <div class="noticeboard-empty-icon">
+              <span class="material-symbols-rounded">forum</span>
+            </div>
+            <p class="state-title">No messages yet</p>
+            <p class="state-text">Post a note, reminder, or shoutout for the family!</p>
+            <button type="button" class="btn btn-primary" id="noticeboard-empty-add-btn">
+              <span class="material-symbols-rounded">add</span>
+              <span>Leave a Note</span>
+            </button>
+          </div>
         </div>
       </section>
     </div>
@@ -240,7 +250,13 @@
         </div>
 
         <div id="messages-feed" class="messages-feed">
-          <!-- Dynamic chat messages injected here -->
+          <div class="empty-state messages-empty">
+            <div class="noticeboard-empty-icon">
+              <span class="material-symbols-rounded">chat</span>
+            </div>
+            <p class="state-title">No messages yet</p>
+            <p class="state-text">Send a quick message to start the family conversation!</p>
+          </div>
         </div>
 
         <form id="messages-compose-form" class="messages-compose-form" autocomplete="off">
@@ -480,6 +496,29 @@
     </div>
   </div>
 
+
+  <nav id="app-bottom-nav" class="bottom-nav-bar" aria-label="Main Navigation">
+    <button type="button" id="tab-nav-calendar" class="bottom-nav-item is-active" role="tab" aria-selected="true" data-tab="calendar">
+      <span class="bottom-nav-icon-wrapper">
+        <span class="material-symbols-rounded bottom-nav-icon">calendar_month</span>
+      </span>
+      <span class="bottom-nav-label">Calendar</span>
+    </button>
+    <button type="button" id="tab-nav-noticeboard" class="bottom-nav-item" role="tab" aria-selected="false" data-tab="noticeboard">
+      <span class="bottom-nav-icon-wrapper">
+        <span class="material-symbols-rounded bottom-nav-icon">sticky_note_2</span>
+        <span id="noticeboard-badge" class="bottom-nav-badge hidden">0</span>
+      </span>
+      <span class="bottom-nav-label">Noticeboard</span>
+    </button>
+    <button type="button" id="tab-nav-messages" class="bottom-nav-item" role="tab" aria-selected="false" data-tab="messages">
+      <span class="bottom-nav-icon-wrapper">
+        <span class="material-symbols-rounded bottom-nav-icon">forum</span>
+        <span id="messages-badge" class="bottom-nav-badge hidden">0</span>
+      </span>
+      <span class="bottom-nav-label">Messages</span>
+    </button>
+  </nav>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>

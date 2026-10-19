@@ -344,38 +344,6 @@
       return;
     }
 
-    const grid = document.getElementById('noticeboard-grid');
-    if (grid) {
-      grid.addEventListener('click', handleCardAction);
-    }
-
-    const form = document.getElementById('notice-form');
-    if (form) {
-      form.addEventListener('submit', handleAddNote);
-    }
-
-    const openModalBtn = document.getElementById('open-notice-modal-btn');
-    if (openModalBtn) {
-      openModalBtn.addEventListener('click', openNoteModal);
-    }
-
-    const closeModalBtn = document.getElementById('notice-modal-close-btn');
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener('click', closeNoteModal);
-    }
-
-    const cancelModalBtn = document.getElementById('notice-modal-cancel-btn');
-    if (cancelModalBtn) {
-      cancelModalBtn.addEventListener('click', closeNoteModal);
-    }
-
-    const modalBackdrop = document.getElementById('notice-modal-backdrop');
-    if (modalBackdrop) {
-      modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) closeNoteModal();
-      });
-    }
-
     if (unsubscribeNotes) unsubscribeNotes();
 
     unsubscribeNotes = db.collection('noticeboard_notes')
@@ -410,7 +378,43 @@
       });
   }
 
+  function setupDomEvents() {
+    const grid = document.getElementById('noticeboard-grid');
+    if (grid) {
+      grid.addEventListener('click', handleCardAction);
+    }
+
+    const form = document.getElementById('notice-form');
+    if (form) {
+      form.addEventListener('submit', handleAddNote);
+    }
+
+    const openModalBtn = document.getElementById('open-notice-modal-btn');
+    if (openModalBtn) {
+      openModalBtn.addEventListener('click', openNoteModal);
+    }
+
+    const closeModalBtn = document.getElementById('notice-modal-close-btn');
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', closeNoteModal);
+    }
+
+    const cancelModalBtn = document.getElementById('notice-modal-cancel-btn');
+    if (cancelModalBtn) {
+      cancelModalBtn.addEventListener('click', closeNoteModal);
+    }
+
+    const modalBackdrop = document.getElementById('notice-modal-backdrop');
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) closeNoteModal();
+      });
+    }
+  }
+
   function init() {
+    setupDomEvents();
+    renderNotes([]);
     if (window.firebase) {
       initFirestore();
     } else {

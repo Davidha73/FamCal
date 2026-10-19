@@ -263,6 +263,31 @@
       return;
     }
 
+    if (unsubscribeMessages) unsubscribeMessages();
+
+    unsubscribeMessages = db.collection('family_messages')
+      .orderBy('createdAt', 'asc')
+      .onSnapshot((snapshot) => {
+        const messages = [];
+        snapshot.forEach((doc) => {
+          messages.push({ id: doc.id, ...doc.data() });
+        });
+        renderMessages(messages);
+      }, (err) => {
+        console.error('Messages snapshot error:', err);
+        const currentFeed = document.getElementById('messages-feed');
+        if (currentFeed) {
+          currentFeed.innerHTML = `
+            <div class="empty-state error-state">
+              <p class="state-title">Messages Offline</p>
+              <p class="state-text">${sanitizeHtml(err.message || 'Could not connect to messaging service.')}</p>
+            </div>
+          `;
+        }
+      });
+  }
+
+  function setupDomEvents() {
     const form = document.getElementById('messages-compose-form');
     if (form) {
       form.addEventListener('submit', handleSendMessage);
@@ -292,32 +317,11 @@
         }
       }
     });
-
-    if (unsubscribeMessages) unsubscribeMessages();
-
-    unsubscribeMessages = db.collection('family_messages')
-      .orderBy('createdAt', 'asc')
-      .onSnapshot((snapshot) => {
-        const messages = [];
-        snapshot.forEach((doc) => {
-          messages.push({ id: doc.id, ...doc.data() });
-        });
-        renderMessages(messages);
-      }, (err) => {
-        console.error('Messages snapshot error:', err);
-        const currentFeed = document.getElementById('messages-feed');
-        if (currentFeed) {
-          currentFeed.innerHTML = `
-            <div class="empty-state error-state">
-              <p class="state-title">Messages Offline</p>
-              <p class="state-text">${sanitizeHtml(err.message || 'Could not connect to messaging service.')}</p>
-            </div>
-          `;
-        }
-      });
   }
 
   function init() {
+    setupDomEvents();
+    renderMessages([]);
     if (window.firebase) {
       initFirestore();
     } else {
