@@ -43,6 +43,40 @@ initMessaging().catch((err) => {
   console.warn('SW Firebase messaging bootstrap error:', err);
 });
 
+// Direct top-level push listener to guarantee immediate execution on iOS lock screen
+self.addEventListener('push', (event) => {
+  let title = 'JustUs Family Update';
+  let body = 'You have a new update in JustUs.';
+  let dataUrl = '/';
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      title = payload.notification?.title || payload.data?.title || payload.title || title;
+      body = payload.notification?.body || payload.data?.body || payload.body || body;
+      dataUrl = payload.data?.url || payload.fcmOptions?.link || '/';
+    } catch (_) {
+      try {
+        const text = event.data.text();
+        if (text) body = text;
+      } catch (_) {}
+    }
+  }
+
+  const options = {
+    body,
+    icon: '/JustUs Icon.png',
+    badge: '/JustUs Icon.png',
+    vibrate: [200, 100, 200],
+    sound: 'default',
+    data: dataUrl
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const urlToOpen = event.notification.data || '/';

@@ -149,20 +149,40 @@ exports.handler = async (event) => {
               body
             },
             data: {
-              url: '/'
+              url: '/',
+              title,
+              body
             },
             webpush: {
               headers: {
-                Urgency: 'high'
+                Urgency: 'high',
+                TTL: '86400'
               },
               notification: {
                 title,
                 body,
                 icon: '/JustUs Icon.png',
-                badge: '/JustUs Icon.png'
+                badge: '/JustUs Icon.png',
+                sound: 'default'
               },
               fcm_options: {
                 link: '/'
+              }
+            },
+            apns: {
+              headers: {
+                'apns-priority': '10',
+                'apns-push-type': 'alert'
+              },
+              payload: {
+                aps: {
+                  alert: {
+                    title,
+                    body
+                  },
+                  sound: 'default',
+                  badge: 1
+                }
               }
             }
           }
