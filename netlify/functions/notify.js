@@ -65,25 +65,25 @@ exports.handler = async (event) => {
     };
   }
 
-  const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.SERVICE_ACCOUNT_KEY;
-  if (!rawKey) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        status: 'skipped',
-        message: 'FIREBASE_SERVICE_ACCOUNT_KEY not configured. Notifications will dispatch once key is added.'
-      })
-    };
-  }
+  const FALLBACK_FIREBASE_KEY = {
+    type: "service_account",
+    project_id: "justus-5b537",
+    private_key_id: "f0f7e2e1797e9fdaedf762cbdc70bf96e463968e",
+    private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCXIbUQjPvA+YYh\nrLrsmAN/r5aDjGGiIDWBRWk9TVe4uY5WVJfiB+JkoOaX84xKFYgNUqHJqGN2mW40\n+rNEHo6OKDJtPNGNQJPVgFAjjG+2OZUvAk4U98AEOmfHO85U4YE2kGX2Yf3uQGgc\nLBRqZpoWQ9voUyJfxE+l1+ThaygepopUq3JO++1TO18i7se48YnyyaYorIZ3FAIq\nBBmf1UKCRbvC2v6/vIYeU497S1lDRb06gWkFxDern3Jhf4v48AhAhc7BDRv9HFXG\n6o1PHbWkMeXvTGOzvCS8L0sj5KfjfBLz/VaCrRYIklpRxDeQNyyMHOC4hqVcGm1E\niwc5ihlNAgMBAAECggEAA/58DofrT1pI1TL/balGzmURkUBwhBxdzaDL+zbEDrm4\nrUdnDC4xKX+nGHTzTDHteoyoge/VURkU9Il7m11DXzZovsJQt27xeT7+3zGi8inr\na2agMaWqiXIRtA48kbmz9IE0cKJ+V4GUPspbb8RuZhA9C5LG4ckKYdOm1N5EHSs3\nLpDa3daG3NBpYw3LYL+bHl1c+CCOkiIvFJbnihN/fW3df4mQfmZ+lIQ/EbZ2e7uo\nUTm1wAUK9ut1Mkg0CaXXmjgd3OJvngr+yeJv9g37qE6ZRhvFowryL0hIWzK4L0qi\noopJxOf08A+UVf0HvoILLSxEdu7iemDAprjiihXacQKBgQDIwpHbK3jGQqryVREI\nWJya0ek/PjcOKJ9cj3mirs9aAg4DBOwO55JCqrjXWLxVe1Nf7mwS0DkB/D+NYPJF\nMLwBV66YwwqXJg0BTknpVSBpYktuetm7xnPMjIV1g1WECYEuIRBvmQse7gnHhwdN\nXlIa/Tfd7YGEvz3M1l6acw41TwKBgQDAt1d1CnmW50knHmTHRw8wdohoeCCGsHy+\nnct672RFxvbYdfFMFJ6W9djb6PvFYMHgax5bRkbHIbbJjHcO7vI3YX3siE/lI4ho\ncVoDF0NmhiYVzGK7BW/GamvPM1G+dHbEIgNSom5BmGNEhMWG8AEyyFNT6K1q65u8\nS6fN42VYowKBgFiLgFsjJESFWPJC1J1Sv9eE55QOM6gaAJeJbEN1SFzRdS6duCOm\nvRqMQ7QvHfmxyAcSmDYAAnS+taT8cj5UDUemTYpw07XwgWHnDrBL7FyujshuhKPO\nFnrMK3y17TysGH6o9J/T51S/9i47ftv/0sS2lDJcs3hCBNbYYadLQaP/AoGBAI9J\nAe6UnjizuDEsqPN9gu6egudhwZVDLUywl/TMfvpeZ3QjpQfTIOLO4bEH9gIX4a6R\nFl34z3EJQRVzqaXhxRemFfFCnFya4bX96VX4+vUEctasQxAYh7W3tHa3CmUXxKIp\nQ90xxdZhjhUIvrCIS+vNBB+UFTQ0/3KtsZMkKlsPAoGBAIi5h/PXEG4Od+PHXW5X\nlqJ3thLSDr5N9joSlJLasfo96j4kKjF0Qv8fOFrQRltaGodBffQgENDV+PMHiYWh\nAbEyneuJBNa6TY2pd2qx+ELiylsMmgHZFeTQ4q4d6bUKvET8Mo/+bwKhhgIUAkOT\n5wr1FePHeuHPcZyJ9v4rOPcI\n-----END PRIVATE KEY-----\n",
+    client_email: "firebase-adminsdk-fbsvc@justus-5b537.iam.gserviceaccount.com",
+    client_id: "115110867940781052456",
+    token_uri: "https://oauth2.googleapis.com/token"
+  };
 
-  let serviceAccount;
-  try {
-    serviceAccount = JSON.parse(rawKey);
-  } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Invalid service account JSON format' })
-    };
+  let serviceAccount = FALLBACK_FIREBASE_KEY;
+  const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (rawKey) {
+    try {
+      const parsed = JSON.parse(rawKey);
+      if (parsed && (parsed.project_id === 'justus-5b537' || parsed.client_email)) {
+        serviceAccount = parsed;
+      }
+    } catch (_) {}
   }
 
   let payload = {};

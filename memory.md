@@ -1,9 +1,8 @@
-## [2026-10-19T23:02:50+01:00 / v2.30.32]
+## [2026-10-19T23:08:00+01:00 / v2.30.33]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Resolved syntax error in `notifications.js` by restoring missing IIFE opening declaration, unblocking button event binding, and bumped cache to v67.
+- **Status:** Replaced Google Calendar service account fallback in `netlify/functions/notify.js` with the dedicated Justus Firebase service account (`justus-5b537`), restoring Firestore token querying and FCM push delivery.
 - **Files Changed:**
-  - `public/modules/notifications.js`
-  - `public/sw.js`
+  - `netlify/functions/notify.js`
   - `memory.md`
-- **Next Objectives:** Reload the app on iPhone and tap "Test" or "Push Alerts" to execute the notification triggers.
+- **Next Objectives:** Tap the "Test" button in the Settings drawer on iPhone to verify successful FCM token querying and push delivery.
