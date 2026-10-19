@@ -1,8 +1,10 @@
-// JustUs - Event Notifications Module
-(function () {
   let swRegistration = null;
   let cachedEvents = [];
   let checkInterval = null;
+  let currentDeviceToken = null;
+  try {
+    currentDeviceToken = localStorage.getItem('famcal_fcm_token');
+  } catch (_) {}
   const scheduledTimers = new Map();
   const NOTIFIED_STORAGE_KEY = 'famcal_notified_events';
 
@@ -83,15 +85,25 @@
     }
 
     const permission = Notification.permission;
+    const testRow = document.getElementById('notification-test-row');
+
     if (permission === 'granted') {
-      if (statusText) statusText.textContent = 'Active (Messages & Events)';
+      if (currentDeviceToken) {
+        if (statusText) statusText.textContent = 'Active (Push Connected)';
+        if (testRow) testRow.classList.remove('hidden');
+      } else {
+        if (statusText) statusText.textContent = 'Active (Messages & Events)';
+        if (testRow) testRow.classList.remove('hidden');
+      }
       if (notifIcon) notifIcon.textContent = 'notifications_active';
     } else if (permission === 'denied') {
       if (statusText) statusText.textContent = 'Blocked in iPhone Settings';
       if (notifIcon) notifIcon.textContent = 'notifications_off';
+      if (testRow) testRow.classList.add('hidden');
     } else {
       if (statusText) statusText.textContent = 'Tap to enable';
       if (notifIcon) notifIcon.textContent = 'notifications';
+      if (testRow) testRow.classList.add('hidden');
     }
   }
 
@@ -187,8 +199,22 @@
         } catch (_) {}
       }
 
-      const messaging = firebase.messaging();
       const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      if (swReg.installing || swReg.waiting) {
+        await new Promise((resolve) => {
+          const sw = swReg.installing || swReg.waiting;
+          if (!sw || sw.state === 'activated') return resolve();
+          sw.addEventListener('statechange', function onState() {
+            if (this.state === 'activated') {
+              this.removeEventListener('statechange', onState);
+              resolve();
+            }
+          });
+          setTimeout(resolve, 2000);
+        });
+      }
+
+      const messaging = firebase.messaging();
       const token = await messaging.getToken({
         serviceWorkerRegistration: swReg,
         ...(vapidKey ? { vapidKey } : {})
@@ -197,24 +223,69 @@
         return null;
       });
 
-      if (token && firebase.firestore) {
-        const db = firebase.firestore();
-        const currentUser = localStorage.getItem('famcal-user-profile') || 'Dad';
-        await db.collection('fcm_tokens').doc(token).set({
-          token,
-          user: currentUser,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        console.log('FCM token synchronized for:', currentUser);
+      if (token) {
+        currentDeviceToken = token;
+        try {
+          localStorage.setItem('famcal_fcm_token', token);
+        } catch (_) {}
+
+        if (firebase.firestore) {
+          const db = firebase.firestore();
+          const currentUser = localStorage.getItem('famcal-user-profile') || 'Dad';
+          await db.collection('fcm_tokens').doc(token).set({
+            token,
+            user: currentUser,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          console.log('FCM token synchronized for:', currentUser);
+        }
+        updateUI();
       }
 
       messaging.onMessage((payload) => {
-        const title = payload.notification?.title || 'JustUs Update';
-        const body = payload.notification?.body || '';
+        const title = payload.notification?.title || payload.data?.title || 'JustUs Update';
+        const body = payload.notification?.body || payload.data?.body || '';
         showNotification(title, { body });
       });
     } catch (err) {
       console.warn('FCM registration error:', err.message);
+    }
+  }
+
+  async function sendTestAlert() {
+    const testBtn = document.getElementById('notification-test-btn');
+    if (testBtn) {
+      testBtn.disabled = true;
+      testBtn.textContent = 'Sending...';
+    }
+    try {
+      if (!currentDeviceToken) {
+        await registerFCMToken();
+      }
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'JustUs Test Alert',
+          body: 'Push notifications are working on this iPhone!',
+          sender: 'test',
+          isTest: true,
+          targetToken: currentDeviceToken
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert('Test notification sent! Exit or lock your phone to view the system banner.');
+      } else {
+        alert('Server response: ' + (data.message || JSON.stringify(data)));
+      }
+    } catch (err) {
+      alert('Failed to send test alert: ' + err.message);
+    } finally {
+      if (testBtn) {
+        testBtn.disabled = false;
+        testBtn.textContent = 'Test';
+      }
     }
   }
 
@@ -256,6 +327,11 @@
         }
         updateUI();
       });
+    }
+
+    const testBtn = document.getElementById('notification-test-btn');
+    if (testBtn) {
+      testBtn.addEventListener('click', sendTestAlert);
     }
 
     updateUI();

@@ -104,8 +104,9 @@ html {
 
 body {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   position: relative;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -120,11 +121,8 @@ body {
 
 /* Header */
 .app-header {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
   z-index: 50;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -253,32 +251,29 @@ body {
 
 /* Main Layout */
 .app-main {
-  position: fixed;
-  top: calc(64px + env(safe-area-inset-top, 0px));
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  left: 0;
-  right: 0;
+  flex: 1 0 auto;
+  min-height: calc(100dvh - 64px);
+  min-height: calc(100vh - 64px);
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
-  padding: 10px 16px 6px 16px;
+  padding: 16px;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
+  gap: 20px;
   box-sizing: border-box;
-  overflow: hidden;
-}
-
-body.keyboard-open .app-main {
-  bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Calendar View Card */
 .calendar-card {
-  flex-shrink: 0;
+  position: sticky;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  z-index: 20;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
-  padding: 12px 14px;
+  padding: 16px;
   box-shadow: var(--shadow-card);
   transition: background-color 0.25s ease, border-color 0.25s ease;
 }
@@ -761,33 +756,34 @@ body.keyboard-open .app-main {
 
 /* Events Feed */
 .events-feed {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  overflow: hidden;
-  margin-top: 4px;
+  gap: 12px;
 }
 
 .feed-header {
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 4px;
 }
 
+.feed-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.feed-counter {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
 .events-grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-bottom: 6px;
+  gap: 12px;
 }
 
 /* Event Cards */
@@ -1093,6 +1089,18 @@ body.keyboard-open .app-main {
   padding: 8px 12px;
   border-radius: 8px;
   margin-top: 8px;
+}
+
+.settings-test-row {
+  margin-top: 8px;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  min-height: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
 }
 
 .custom-dropdown {
@@ -1569,10 +1577,8 @@ body.keyboard-open .app-main {
 .view-container {
   display: flex;
   flex-direction: column;
+  gap: 20px;
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
   animation: fadeInView 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1617,6 +1623,10 @@ body.keyboard-open .app-main {
 
 body.keyboard-open .bottom-nav-bar {
   display: none !important;
+}
+
+body.keyboard-open #messages-view-container {
+  bottom: env(safe-area-inset-bottom, 0px) !important;
 }
 
 .bottom-nav-item {
@@ -1685,17 +1695,19 @@ body.keyboard-open .bottom-nav-bar {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
-  padding: 14px 16px;
+  padding: 18px;
   box-shadow: var(--shadow-card);
   transition: background-color 0.25s ease, border-color 0.25s ease;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .noticeboard-header-card {
-  flex-shrink: 0;
-  margin-bottom: 8px;
+  position: sticky;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  z-index: 20;
+  margin-bottom: 14px;
 }
 
 .noticeboard-top-bar {
@@ -1735,15 +1747,9 @@ body.keyboard-open .bottom-nav-bar {
 
 /* Noticeboard Cards Grid */
 .noticeboard-grid {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 6px;
+  gap: 14px;
 }
 
 .notice-card {
@@ -2299,12 +2305,17 @@ body.keyboard-open .bottom-nav-bar {
 
 /* Dedicated Family Messages Chat Module */
 #messages-view-container {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
+  position: fixed;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 10px 16px 8px 16px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  z-index: 20;
 }
 
 #messages-view-container.hidden {

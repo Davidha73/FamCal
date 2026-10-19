@@ -120,13 +120,19 @@ exports.handler = async (event) => {
     const tokensData = await tokensRes.json();
     const documents = tokensData.documents || [];
 
+    const targetToken = payload.targetToken;
+    const isTest = payload.isTest === true;
+
     const sendPromises = documents.map(async (doc) => {
       const fields = doc.fields || {};
       const token = fields.token?.stringValue;
       const user = (fields.user?.stringValue || '').toLowerCase();
 
-      // Don't send notification to the device that triggered it
-      if (!token || (sender && user === sender)) return null;
+      // If test token is specified, only send to that token
+      if (targetToken && token !== targetToken) return null;
+
+      // Don't send notification to the device that triggered it (unless it's a test alert)
+      if (!token || (!isTest && sender && user === sender)) return null;
 
       const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
       return fetch(fcmUrl, {
@@ -144,13 +150,35 @@ exports.handler = async (event) => {
             },
             data: {
               url: '/'
+            },
+            webpush: {
+              headers: {
+                Urgency: 'high'
+              },
+              notification: {
+                title,
+                body,
+                icon: '/JustUs Icon.png',
+                badge: '/JustUs Icon.png'
+              },
+              fcm_options: {
+                link: '/'
+              }
             }
           }
         })
+      }).then(async (res) => {
+        if (!res.ok) {
+          const errText = await res.text();
+          console.warn('FCM send failed:', errText);
+          return { success: false, error: errText };
+        }
+        return { success: true };
       });
     });
 
-    await Promise.all(sendPromises);
+    const results = await Promise.all(sendPromises);
+    const validResults = results.filter(Boolean);
 
     return {
       statusCode: 200,
