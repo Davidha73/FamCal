@@ -66,13 +66,13 @@
     return temp.innerHTML;
   }
 
-  function copyToNote(text) {
+  function copyToNote(text, imageUrl = null) {
     if (typeof window.FamCalSwitchTab === 'function') {
       window.FamCalSwitchTab('noticeboard');
     }
     setTimeout(() => {
       if (typeof window.FamCalOpenNoteModal === 'function') {
-        window.FamCalOpenNoteModal({ text: text || '' });
+        window.FamCalOpenNoteModal({ text: text || '', imageUrl: imageUrl || null });
       }
     }, 120);
   }
@@ -135,9 +135,10 @@
       if (!btn) return;
       const type = btn.dataset.convert;
       const text = msg.text || '';
+      const imageUrl = msg.imageUrl || null;
       closePopover();
 
-      if (type === 'note') copyToNote(text);
+      if (type === 'note') copyToNote(text, imageUrl);
       else if (type === 'list') copyToList(text);
       else if (type === 'event') copyToEvent(text);
     }
@@ -294,7 +295,9 @@
 
       if (cmd === '/note') {
         inputElement.value = '';
-        copyToNote(remainder);
+        const photo = window.FamCalPhotos ? window.FamCalPhotos.getPendingPhoto() : null;
+        copyToNote(remainder, photo ? photo.dataUrl : null);
+        if (photo && window.FamCalPhotos) window.FamCalPhotos.clearPendingPhoto();
       } else if (cmd === '/list') {
         inputElement.value = '';
         copyToList(remainder);

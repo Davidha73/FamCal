@@ -260,6 +260,11 @@
 
         contentHtml = `
           <div class="notice-card-body">
+            ${note.imageUrl ? `
+              <div class="notice-card-image-wrap">
+                <img src="${sanitizeHtml(note.imageUrl)}" alt="Attached photo" class="notice-card-image" loading="lazy">
+              </div>
+            ` : ''}
             <p class="notice-card-text">${window.FamCalMentions ? window.FamCalMentions.formatMentions(sanitizeHtml(note.text)) : sanitizeHtml(note.text)}</p>
             ${reminderBadgeHtml}
             ${loveBadgeHtml}
@@ -342,6 +347,26 @@
     }
   }
 
+  let pendingNotePhoto = null;
+
+  function setNotePhoto(dataUrl) {
+    pendingNotePhoto = dataUrl || null;
+    const preview = document.getElementById('notice-photo-preview');
+    const previewImg = document.getElementById('notice-photo-preview-img');
+    const photoBtn = document.getElementById('notice-photo-btn');
+    if (preview && previewImg) {
+      if (pendingNotePhoto) {
+        previewImg.src = pendingNotePhoto;
+        preview.classList.remove('hidden');
+        if (photoBtn) photoBtn.classList.add('hidden');
+      } else {
+        previewImg.src = '';
+        preview.classList.add('hidden');
+        if (photoBtn) photoBtn.classList.remove('hidden');
+      }
+    }
+  }
+
   function openNoteModal(noteToEdit) {
     const modal = document.getElementById('notice-modal-backdrop');
     const form = document.getElementById('notice-form');
@@ -378,6 +403,7 @@
       if (reminderTimeInput) reminderTimeInput.value = noteToEdit.reminderTime || '';
       if (recipientSelect) recipientSelect.value = noteToEdit.recipient || '';
       if (expirySelect) expirySelect.value = noteToEdit.expiryHours || '';
+      setNotePhoto(noteToEdit.imageUrl || null);
       updateCategoryGroupsVisibility(noteToEdit.category || 'Note');
     } else {
       if (titleEl) titleEl.textContent = 'Pin a Note';
@@ -389,6 +415,7 @@
       if (reminderTimeInput) reminderTimeInput.value = '';
       if (recipientSelect) recipientSelect.value = '';
       if (expirySelect) expirySelect.value = '';
+      setNotePhoto((noteToEdit && noteToEdit.imageUrl) ? noteToEdit.imageUrl : null);
       updateCategoryGroupsVisibility('Note');
     }
 
@@ -414,6 +441,9 @@
     if (reminderTimeInput) reminderTimeInput.value = '';
     if (recipientSelect) recipientSelect.value = '';
     if (expirySelect) expirySelect.value = '';
+    setNotePhoto(null);
+    const photoInput = document.getElementById('notice-photo-input');
+    if (photoInput) photoInput.value = '';
     updateCategoryGroupsVisibility('Note');
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
@@ -470,7 +500,8 @@
           recipient,
           expiryHours,
           reminded: false,
-          linkedListId: linkedListId || null
+          linkedListId: linkedListId || null,
+          imageUrl: pendingNotePhoto || null
         });
 
         if (linkedListId) {
@@ -491,6 +522,7 @@
           acknowledgedBy: [],
           reminded: false,
           linkedListId: linkedListId || null,
+          imageUrl: pendingNotePhoto || null,
           likes: [],
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -540,6 +572,12 @@
   }
 
   async function handleCardAction(e) {
+    const img = e.target.closest('.notice-card-image');
+    if (img && img.src && window.FamCalPhotos && typeof window.FamCalPhotos.openLightbox === 'function') {
+      window.FamCalPhotos.openLightbox(img.src);
+      return;
+    }
+
     const btn = e.target.closest('button[data-action]');
     if (!btn || !db) return;
     const action = btn.dataset.action;
@@ -859,6 +897,33 @@
     const noticeText = document.getElementById('notice-text');
     if (noticeText && window.FamCalMentions) {
       window.FamCalMentions.attachAutocomplete(noticeText);
+    }
+
+    const notePhotoBtn = document.getElementById('notice-photo-btn');
+    const notePhotoInput = document.getElementById('notice-photo-input');
+    const notePhotoRemoveBtn = document.getElementById('notice-photo-remove-btn');
+
+    if (notePhotoBtn && notePhotoInput) {
+      notePhotoBtn.addEventListener('click', () => notePhotoInput.click());
+      notePhotoInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          if (window.FamCalPhotos && typeof window.FamCalPhotos.compressImage === 'function') {
+            const compressed = await window.FamCalPhotos.compressImage(file);
+            setNotePhoto(compressed.dataUrl);
+          }
+        } catch (err) {
+          console.error('Failed to compress note photo:', err);
+        }
+      });
+    }
+
+    if (notePhotoRemoveBtn) {
+      notePhotoRemoveBtn.addEventListener('click', () => {
+        setNotePhoto(null);
+        if (notePhotoInput) notePhotoInput.value = '';
+      });
     }
 
     window.addEventListener('famcal-firebase-ready', (e) => {

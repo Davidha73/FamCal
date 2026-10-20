@@ -498,6 +498,25 @@
           <textarea id="notice-text" class="form-input form-textarea" placeholder="Type a note, reminder, or shoutout..." rows="3" required></textarea>
         </div>
 
+        <div class="form-group">
+          <input type="file" id="notice-photo-input" accept="image/*" class="hidden" aria-hidden="true">
+          <div id="notice-photo-preview" class="note-photo-preview hidden">
+            <div class="note-photo-thumb-wrap">
+              <img id="notice-photo-preview-img" src="" alt="Note photo preview" class="note-photo-thumbnail">
+            </div>
+            <div class="note-photo-info">
+              <span class="note-photo-title">Photo attached</span>
+            </div>
+            <button type="button" id="notice-photo-remove-btn" class="photo-remove-btn" aria-label="Remove photo">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+          <button type="button" id="notice-photo-btn" class="btn btn-secondary btn-attach-photo">
+            <span class="material-symbols-rounded">image</span>
+            <span>Attach Photo</span>
+          </button>
+        </div>
+
         <div class="form-grid-two">
           <div class="form-group">
             <label for="notice-category" class="form-label">Category</label>

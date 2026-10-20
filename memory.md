@@ -1,11 +1,12 @@
-## [2026-10-20T20:57:00+01:00 / v2.30.61]
+## [2026-10-20T21:06:00+01:00 / v2.30.62]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Resolved photo sending hang by switching to direct client-side canvas compression (~45KB) that writes immediately to Firestore without stalling on unconfigured Storage buckets.
+- **Status:** Enabled photo attachments on noticeboard notes with preview thumbnail, card rendering, and lightbox integration, plus automatic photo transfer when converting messages to notes.
 - **Files Changed:**
-  - `public/modules/photo-upload.js`
-  - `public/modules/messages.js`
   - `public/index.html`
+  - `public/modules/noticeboard.js`
+  - `public/modules/message-links.js`
+  - `public/style.css`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Refresh JustUs, attach a photo in the Messages tab, and tap Send to confirm instant posting and chat bubble rendering.
+- **Next Objectives:** Create a note with an attached photo on the Noticeboard, and use the message transfer button on a photo message to test automatic note creation with image transfer.
