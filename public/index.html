@@ -279,7 +279,11 @@
         </div>
 
         <form id="messages-compose-form" class="messages-compose-form" autocomplete="off">
-          <input type="text" id="messages-input" class="messages-input" placeholder="Message the family..." required maxlength="500">
+          <input type="file" id="messages-photo-input" accept="image/*" class="hidden" aria-hidden="true">
+          <button type="button" id="messages-photo-btn" class="messages-action-btn" aria-label="Add photo" title="Attach Photo">
+            <span class="material-symbols-rounded">image</span>
+          </button>
+          <input type="text" id="messages-input" class="messages-input" placeholder="Message the family..." maxlength="500">
           <button type="submit" id="messages-send-btn" class="messages-send-btn" aria-label="Send message">
             <span class="material-symbols-rounded">send</span>
           </button>
@@ -292,9 +296,14 @@
   <aside id="settings-drawer" class="settings-drawer" aria-labelledby="settings-heading" aria-hidden="true">
     <div class="drawer-header">
       <h2 id="settings-heading" class="drawer-title">Settings</h2>
-      <button id="close-drawer-btn" class="icon-button icon-button-ghost" aria-label="Close Settings">
-        <span class="material-symbols-rounded">close</span>
-      </button>
+      <div class="drawer-header-actions">
+        <button id="open-help-btn" class="icon-button icon-button-ghost" aria-label="Help & Guide" title="Help & Guide">
+          <span class="material-symbols-rounded">help</span>
+        </button>
+        <button id="close-drawer-btn" class="icon-button icon-button-ghost" aria-label="Close Settings">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
     </div>
 
     <div class="drawer-body">
@@ -644,6 +653,116 @@
   </div>
 
 
+  <div id="help-modal-backdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-lg help-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+      <div class="modal-header help-modal-header">
+        <div class="modal-title-group">
+          <div class="help-title-badge">
+            <span class="material-symbols-rounded">help</span>
+            <h2 id="help-modal-title" class="modal-title">JustUs Help & Guide</h2>
+          </div>
+          <span class="modal-subtitle">Everything you need to know about your family app</span>
+        </div>
+        <button type="button" id="close-help-modal-btn" class="icon-button icon-button-ghost" aria-label="Close Guide">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <div class="help-modal-scrollable">
+        <section class="help-section-card">
+          <div class="help-section-header">
+            <span class="material-symbols-rounded help-section-icon icon-cal">calendar_month</span>
+            <h3 class="help-section-title">Calendar & Events</h3>
+          </div>
+          <p class="help-text">View and manage the whole family's schedule in one shared place.</p>
+          <ul class="help-list">
+            <li><strong>Add Events:</strong> Tap any date on the calendar, then tap <em>+ Add Event</em>. Fill in the event title, start and finish times, category, and who it's for.</li>
+            <li><strong>Month & Week Views:</strong> Use the segmented toggle at the top of the calendar to switch between the full month view and an expanded week view.</li>
+            <li><strong>Work Shifts:</strong> Set up your standard work shifts (Early, Late, Night) under <em>Default Shifts</em> in Settings. You can quickly stamp shifts onto calendar days with one tap.</li>
+            <li><strong>Jump to Today:</strong> Tap the calendar icon in the top header bar anytime to jump back to today's date.</li>
+          </ul>
+        </section>
+
+        <section class="help-section-card">
+          <div class="help-section-header">
+            <span class="material-symbols-rounded help-section-icon icon-notes">sticky_note_2</span>
+            <h3 class="help-section-title">Noticeboard: Notes & Lists</h3>
+          </div>
+          <p class="help-text">The family noticeboard keeps sticky notes, reminders, and live shared checklists organized.</p>
+          <ul class="help-list">
+            <li><strong>Pin a Note:</strong> Tap <em>+ Note</em> to write a note, reminder, or shoutout for the family. You can choose a category icon and pin important notes to stay at the top.</li>
+            <li><strong>Shared Checklists:</strong> Tap <em>+ List</em> to create packing lists, chore lists, or grocery lists. Anyone in the family can tap items to check them off in real-time.</li>
+            <li><strong>Link a List to a Note:</strong> When creating a checklist, you can optionally link it directly to an existing note card.</li>
+            <li><strong>Filter Chips:</strong> Use the filter pills at the top to filter items by category (Work, Tasks, Fun, Family) or by family member.</li>
+          </ul>
+        </section>
+
+        <section class="help-section-card">
+          <div class="help-section-header">
+            <span class="material-symbols-rounded help-section-icon icon-chat">forum</span>
+            <h3 class="help-section-title">Messages & Family Chat</h3>
+          </div>
+          <p class="help-text">Stay in touch instantly with dedicated real-time family messaging.</p>
+          <ul class="help-list">
+            <li><strong>Unread Badges:</strong> The Messages tab badge alerts you whenever new messages arrive from other family members.</li>
+            <li><strong>Message Actions:</strong> Tap the convert icon on any message bubble to instantly turn that message into a calendar event, note, or checklist.</li>
+          </ul>
+        </section>
+
+        <section class="help-section-card">
+          <div class="help-section-header">
+            <span class="material-symbols-rounded help-section-icon icon-mentions">alternate_email</span>
+            <h3 class="help-section-title">The '@' Mention System</h3>
+          </div>
+          <p class="help-text">Tag specific family members in messages or notes so they never miss important updates.</p>
+          <ul class="help-list">
+            <li><strong>How to Use:</strong> Type <code>@</code> in the message input or in a note description. A suggestion bar will appear with <strong>Dad</strong>, <strong>Mum</strong>, <strong>Owen</strong>, and <strong>Liv</strong>.</li>
+            <li><strong>Signature Color Badges:</strong> Tapping a family member inserts a pill styled in their unique member color.</li>
+            <li><strong>Priority Push Alerts:</strong> When someone tags you with <code>@YourName</code>, your device receives a targeted alert notification highlighting that you were mentioned!</li>
+          </ul>
+        </section>
+
+        <section class="help-section-card">
+          <div class="help-section-header">
+            <span class="material-symbols-rounded help-section-icon icon-slash">terminal</span>
+            <h3 class="help-section-title">The '/' Slash Shortcuts & Conversions</h3>
+          </div>
+          <p class="help-text">Quickly turn chat messages into actionable items using slash commands.</p>
+          <ul class="help-list">
+            <li><code>/note [text]</code> &ndash; Instantly opens a new note with your text prefilled.</li>
+            <li><code>/list [title]</code> &ndash; Creates a new checklist with your text as the list title.</li>
+            <li><code>/event [title]</code> &ndash; Opens the calendar event form with your text ready as the event summary.</li>
+            <li><code>/link</code> &ndash; Shows your active notes and checklists so you can attach a card link to your chat message.</li>
+            <li><strong>Copy Existing Messages:</strong> Tap the transfer button (<span class="material-symbols-rounded help-inline-icon">drive_file_move</span>) on any sent message bubble to copy its text directly into a note, list, or event without retyping.</li>
+          </ul>
+        </section>
+
+        <section class="help-section-card">
+          <div class="help-section-header">
+            <span class="material-symbols-rounded help-section-icon icon-settings">tune</span>
+            <h3 class="help-section-title">Settings & Push Alerts</h3>
+          </div>
+          <p class="help-text">Configure JustUs to match your preferences.</p>
+          <ul class="help-list">
+            <li><strong>Appearance:</strong> Toggle between Dark Mode and Light Mode anytime.</li>
+            <li><strong>Who Are You:</strong> Choose your default family profile so new events and messages automatically attribute to you.</li>
+            <li><strong>Push Alerts:</strong> Enable Push Alerts to receive real-time notifications even when the app is in the background. On iOS, add JustUs to your Home Screen to enable notifications.</li>
+            <li><strong>Offline Support:</strong> JustUs caches your schedules and notes so you can view your family calendar even with no mobile signal.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="photo-lightbox-backdrop" class="modal-backdrop hidden photo-lightbox-backdrop" aria-hidden="true">
+    <div class="photo-lightbox-container">
+      <button type="button" id="close-lightbox-btn" class="icon-button icon-button-ghost lightbox-close-btn" aria-label="Close photo">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+      <img id="photo-lightbox-img" src="" alt="Full size photo" class="photo-lightbox-image">
+    </div>
+  </div>
+
   <nav id="app-bottom-nav" class="bottom-nav-bar" aria-label="Main Navigation">
     <button type="button" id="tab-nav-calendar" class="bottom-nav-item is-active" role="tab" aria-selected="true" data-tab="calendar">
       <span class="bottom-nav-icon-wrapper">
@@ -681,7 +800,9 @@
   <script src="modules/mentions.js"></script>
   <script src="modules/noticeboard.js"></script>
   <script src="modules/message-links.js"></script>
+  <script src="modules/photo-upload.js"></script>
   <script src="modules/messages.js"></script>
+  <script src="modules/help-guide.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

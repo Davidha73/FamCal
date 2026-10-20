@@ -1,15 +1,11 @@
-## [2026-10-20T20:25:00+01:00 / v2.30.56]
+## [2026-10-20T20:57:00+01:00 / v2.30.61]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Integrated message-to-item conversions, slash commands (`/note`, `/list`, `/event`, `/link`), note/list attachment picker, and linked card navigation.
+- **Status:** Resolved photo sending hang by switching to direct client-side canvas compression (~45KB) that writes immediately to Firestore without stalling on unconfigured Storage buckets.
 - **Files Changed:**
-  - `public/modules/message-links.js`
+  - `public/modules/photo-upload.js`
   - `public/modules/messages.js`
-  - `public/modules/noticeboard.js`
-  - `public/modules/lists.js`
-  - `public/app.js`
-  - `public/style.css`
   - `public/index.html`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Test typing `/` in the message compose field to verify the slash command menu, and test the message conversion button on message bubbles.
+- **Next Objectives:** Refresh JustUs, attach a photo in the Messages tab, and tap Send to confirm instant posting and chat bubble rendering.

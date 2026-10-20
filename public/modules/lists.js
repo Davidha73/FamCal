@@ -265,7 +265,8 @@
             body: `${items.length} item${items.length === 1 ? '' : 's'} added.`,
             sender: author,
             senderToken,
-            url: '/#lists'
+            url: '/?tab=noticeboard',
+            tab: 'noticeboard'
           })
         }).catch((err) => console.warn('List notification error:', err));
       }

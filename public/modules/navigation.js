@@ -95,6 +95,18 @@
     }
   }
 
+  function getUrlTargetTab() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      if (tabParam && TABS.some(t => t.id === tabParam)) return tabParam;
+
+      const hash = window.location.hash ? window.location.hash.replace('#', '').toLowerCase() : '';
+      if (hash && TABS.some(t => t.id === hash)) return hash;
+    } catch (_) {}
+    return null;
+  }
+
   function init() {
     renderNavbar();
 
@@ -105,9 +117,23 @@
       }
     });
 
-    const initialTab = localStorage.getItem(STORAGE_KEY) || 'calendar';
+    const urlTarget = getUrlTargetTab();
+    const initialTab = urlTarget || localStorage.getItem(STORAGE_KEY) || 'calendar';
     switchTab(initialTab);
     setupKeyboardHandling();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NAVIGATE_TAB' && event.data.tab) {
+          switchTab(event.data.tab);
+        }
+      });
+    }
+
+    window.addEventListener('hashchange', () => {
+      const hashTab = getUrlTargetTab();
+      if (hashTab) switchTab(hashTab);
+    });
   }
 
   function setupKeyboardHandling() {

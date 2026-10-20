@@ -521,7 +521,8 @@
             sender: author,
             senderToken,
             mentions,
-            url: '/#noticeboard'
+            url: '/?tab=noticeboard',
+            tab: 'noticeboard'
           })
         }).catch((err) => console.warn('Note notification error:', err));
       }

@@ -121,7 +121,12 @@
                 </button>
               ` : ''}
             </div>
-            <p class="chat-bubble-text">${textHtml}</p>
+            ${msg.imageUrl ? `
+              <div class="chat-bubble-image-wrap">
+                <img src="${sanitizeHtml(msg.imageUrl)}" alt="Photo from ${sanitizeHtml(msg.author)}" class="chat-bubble-image" loading="lazy">
+              </div>
+            ` : ''}
+            ${textHtml ? `<p class="chat-bubble-text">${textHtml}</p>` : ''}
             ${linkedHtml}
           </div>
         </div>
@@ -172,7 +177,8 @@
     const input = document.getElementById('messages-input');
     const sendBtn = document.getElementById('messages-send-btn');
     const text = input ? input.value.trim() : '';
-    if (!text) return;
+    const photo = window.FamCalPhotos ? window.FamCalPhotos.getPendingPhoto() : null;
+    if (!text && !photo) return;
 
     if (sendBtn) sendBtn.disabled = true;
 
@@ -185,6 +191,10 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
+      if (photo && photo.dataUrl) {
+        messageDoc.imageUrl = photo.dataUrl;
+      }
+
       if (attachment) {
         messageDoc.linkedId = attachment.id;
         messageDoc.linkedType = attachment.type;
@@ -196,19 +206,24 @@
       if (window.FamCalMessageLinks) {
         window.FamCalMessageLinks.clearPendingAttachment();
       }
+      if (window.FamCalPhotos) {
+        window.FamCalPhotos.clearPendingPhoto();
+      }
 
       const senderToken = localStorage.getItem('famcal_fcm_token') || null;
       const mentions = window.FamCalMentions ? window.FamCalMentions.extractMentions(text) : [];
+      const notifBody = text || '📷 Sent a photo';
       fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: `${getActiveUser()} sent a message`,
-          body: text,
+          body: notifBody,
           sender: getActiveUser(),
           senderToken,
           mentions,
-          url: '/#messages'
+          url: '/?tab=messages',
+          tab: 'messages'
         })
       }).catch((err) => console.warn('Message notification error:', err));
 

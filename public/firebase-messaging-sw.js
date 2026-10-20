@@ -29,11 +29,13 @@ async function initMessaging() {
   const messaging = firebase.messaging();
   messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification?.title || payload.data?.title || 'JustUs Family Update';
+    const rawUrl = payload.data?.url || payload.fcmOptions?.link || '/';
+    const targetTab = payload.data?.tab || (rawUrl.includes('messages') ? 'messages' : (rawUrl.includes('noticeboard') ? 'noticeboard' : 'calendar'));
     const notificationOptions = {
       body: payload.notification?.body || payload.data?.body || 'You have a new update in JustUs.',
       icon: '/JustUs Icon.png',
       badge: '/JustUs Icon.png',
-      data: payload.data?.url || '/'
+      data: { url: rawUrl, tab: targetTab }
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
   });
@@ -48,6 +50,7 @@ self.addEventListener('push', (event) => {
   let title = 'JustUs Family Update';
   let body = 'You have a new update in JustUs.';
   let dataUrl = '/';
+  let targetTab = 'calendar';
 
   if (event.data) {
     try {
@@ -55,6 +58,7 @@ self.addEventListener('push', (event) => {
       title = payload.notification?.title || payload.data?.title || payload.title || title;
       body = payload.notification?.body || payload.data?.body || payload.body || body;
       dataUrl = payload.data?.url || payload.fcmOptions?.link || '/';
+      targetTab = payload.data?.tab || (dataUrl.includes('messages') ? 'messages' : (dataUrl.includes('noticeboard') ? 'noticeboard' : 'calendar'));
     } catch (_) {
       try {
         const text = event.data.text();
@@ -69,7 +73,7 @@ self.addEventListener('push', (event) => {
     badge: '/JustUs Icon.png',
     vibrate: [200, 100, 200],
     sound: 'default',
-    data: dataUrl
+    data: { url: dataUrl, tab: targetTab }
   };
 
   event.waitUntil(
@@ -85,13 +89,33 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data || '/';
+  const rawData = event.notification.data || '/';
+  let urlToOpen = typeof rawData === 'string' ? rawData : (rawData.url || '/');
+  let targetTab = typeof rawData === 'object' && rawData.tab ? rawData.tab : null;
+
+  if (!targetTab) {
+    if (urlToOpen.includes('messages')) targetTab = 'messages';
+    else if (urlToOpen.includes('noticeboard') || urlToOpen.includes('lists')) targetTab = 'noticeboard';
+    else if (urlToOpen.includes('calendar')) targetTab = 'calendar';
+  }
+
+  if (targetTab && !urlToOpen.includes('tab=')) {
+    urlToOpen = `/?tab=${targetTab}`;
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus();
+          client.focus();
+          if (targetTab) {
+            client.postMessage({
+              type: 'NAVIGATE_TAB',
+              tab: targetTab,
+              url: urlToOpen
+            });
+          }
+          return;
         }
       }
       if (clients.openWindow) {

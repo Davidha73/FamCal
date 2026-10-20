@@ -123,7 +123,8 @@ exports.handler = async (event) => {
     const targetToken = payload.targetToken;
     const senderToken = payload.senderToken;
     const isTest = payload.isTest === true;
-    const targetUrl = payload.url || '/';
+    const targetTab = payload.tab || (payload.url && payload.url.includes('messages') ? 'messages' : ((payload.url && (payload.url.includes('noticeboard') || payload.url.includes('lists'))) ? 'noticeboard' : 'calendar'));
+    const targetUrl = payload.url || `/?tab=${targetTab}`;
 
     const sendPromises = documents.map(async (doc) => {
       const fields = doc.fields || {};
@@ -158,6 +159,7 @@ exports.handler = async (event) => {
             },
             data: {
               url: targetUrl,
+              tab: targetTab,
               title: docTitle,
               body
             },
@@ -190,12 +192,14 @@ exports.handler = async (event) => {
                   },
                   sound: 'default',
                   badge: 1
-                }
+                },
+                url: targetUrl,
+                tab: targetTab
               }
             }
           }
         })
-      }).then(async (res) => {
+      }); }).then(async (res) => {
         if (!res.ok) {
           const errText = await res.text();
           console.warn('FCM send failed:', errText);
