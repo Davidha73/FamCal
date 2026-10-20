@@ -505,6 +505,31 @@
           </div>
         </div>
 
+        <div id="notice-reminder-time-group" class="form-group hidden">
+          <label for="notice-reminder-time" class="form-label">Remind at (Date & Time)</label>
+          <input type="datetime-local" id="notice-reminder-time" class="form-input">
+        </div>
+
+        <div id="notice-recipient-group" class="form-group hidden">
+          <label for="notice-recipient" class="form-label">Special Delivery (To)</label>
+          <select id="notice-recipient" class="form-input">
+            <option value="">Everyone (Family)</option>
+            <option value="Mum">Mum ❤️</option>
+            <option value="Dad">Dad ❤️</option>
+            <option value="Owen">Owen ❤️</option>
+            <option value="Liv">Liv ❤️</option>
+          </select>
+        </div>
+
+        <div id="notice-expiry-group" class="form-group">
+          <label for="notice-expiry" class="form-label">Keep on Board</label>
+          <select id="notice-expiry" class="form-input">
+            <option value="">Always (Permanent)</option>
+            <option value="24">Auto-clear in 24 hours</option>
+            <option value="48">Auto-clear in 48 hours</option>
+          </select>
+        </div>
+
         <div class="form-group">
           <label for="notice-linked-list" class="form-label">Link to a List (Optional)</label>
           <select id="notice-linked-list" class="form-input">
@@ -645,6 +670,7 @@
   <script src="modules/updater.js"></script>
   <script src="modules/navigation.js"></script>
   <script src="modules/lists.js"></script>
+  <script src="modules/category-enhancements.js"></script>
   <script src="modules/noticeboard.js"></script>
   <script src="modules/messages.js"></script>
   <script src="app.js"></script>

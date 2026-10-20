@@ -121,7 +121,9 @@ exports.handler = async (event) => {
     const documents = tokensData.documents || [];
 
     const targetToken = payload.targetToken;
+    const senderToken = payload.senderToken;
     const isTest = payload.isTest === true;
+    const targetUrl = payload.url || '/';
 
     const sendPromises = documents.map(async (doc) => {
       const fields = doc.fields || {};
@@ -131,8 +133,12 @@ exports.handler = async (event) => {
       // If test token is specified, only send to that token
       if (targetToken && token !== targetToken) return null;
 
-      // Don't send notification to the device that triggered it (unless it's a test alert)
-      if (!token || (!isTest && sender && user === sender)) return null;
+      // Don't send notification to the exact device that triggered it
+      if (senderToken && token === senderToken) return null;
+
+      // If senderToken is not provided and user matches sender, skip to avoid self-notification
+      if (!senderToken && !isTest && sender && user === sender) return null;
+      if (!token) return null;
 
       const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
       return fetch(fcmUrl, {
@@ -149,7 +155,7 @@ exports.handler = async (event) => {
               body
             },
             data: {
-              url: '/',
+              url: targetUrl,
               title,
               body
             },
@@ -166,7 +172,7 @@ exports.handler = async (event) => {
                 sound: 'default'
               },
               fcm_options: {
-                link: '/'
+                link: targetUrl
               }
             },
             apns: {

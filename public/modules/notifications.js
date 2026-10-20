@@ -92,7 +92,7 @@
       if (currentDeviceToken) {
         if (statusText) statusText.textContent = 'Active (Push Connected)';
       } else {
-        if (statusText) statusText.textContent = 'Active (Messages & Events)';
+        if (statusText) statusText.textContent = 'Active (Messages, Notes, Lists & Events)';
       }
       if (notifIcon) notifIcon.textContent = 'notifications_active';
     } else if (permission === 'denied') {
@@ -199,7 +199,10 @@
         } catch (_) {}
       }
 
-      const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      let swReg = await navigator.serviceWorker.getRegistration('/');
+      if (!swReg) {
+        swReg = await navigator.serviceWorker.register('/sw.js');
+      }
       if (swReg.installing || swReg.waiting) {
         await new Promise((resolve) => {
           const sw = swReg.installing || swReg.waiting;
@@ -252,6 +255,7 @@
       }
 
       messaging.onMessage((payload) => {
+        if (document.visibilityState === 'visible') return;
         const title = payload.notification?.title || payload.data?.title || 'JustUs Update';
         const body = payload.notification?.body || payload.data?.body || '';
         showNotification(title, { body });
@@ -369,7 +373,8 @@
   window.FamCalNotifications = {
     initNotifications,
     checkUpcomingEvents,
-    registerFCMToken
+    registerFCMToken,
+    showNotification
   };
 
   if (document.readyState === 'loading') {

@@ -69,6 +69,23 @@
     }
   }
 
+  function formatReminderDateTime(dtString) {
+    if (!dtString) return '';
+    try {
+      const d = new Date(dtString);
+      if (isNaN(d.getTime())) return dtString;
+      return d.toLocaleString([], {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+    } catch (_) {
+      return dtString;
+    }
+  }
+
   function renderNotes(notes) {
     const container = document.getElementById('noticeboard-grid');
     const counter = document.getElementById('noticeboard-count');
@@ -103,7 +120,24 @@
 
     const currentProfile = getActiveUser();
 
-    container.innerHTML = notes.map(note => {
+    const activeNotes = notes.filter((n) => {
+      if (window.FamCalCategoryEnhancements && window.FamCalCategoryEnhancements.isNoteExpired(n)) {
+        return false;
+      }
+      return true;
+    });
+
+    activeNotes.sort((a, b) => {
+      const aUrgent = a.category === 'Urgent' && !a.completed;
+      const bUrgent = b.category === 'Urgent' && !b.completed;
+      if (aUrgent !== bUrgent) return aUrgent ? -1 : 1;
+      if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
+      const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+      const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+      return timeB - timeA;
+    });
+
+    container.innerHTML = activeNotes.map(note => {
       const authorKey = (note.author || 'other').toLowerCase();
       const authorClass = `user-${authorKey}`;
       const dotClass = `dot-${authorKey}`;
@@ -113,6 +147,8 @@
       const likedByMe = Array.isArray(note.likes) && note.likes.includes(currentProfile);
       const likesCount = Array.isArray(note.likes) ? note.likes.length : 0;
       const isList = note.type === 'list';
+      const isUrgent = note.category === 'Urgent';
+      const isLove = note.category === 'Love';
       const category = note.category || (isList ? 'List' : 'Note');
       const categoryIcon = isList ? '📋' : (CATEGORY_ICONS[category] || '📝');
       const categoryLabel = isList ? '📋 List' : `${categoryIcon} ${category}`;
@@ -187,15 +223,60 @@
           </div>
         `;
       } else {
+        const reminderBadgeHtml = (note.category === 'Reminder' && note.reminderTime) ? `
+          <div class="notice-reminder-badge">
+            <span class="material-symbols-rounded">alarm</span>
+            <span>Remind: ${formatReminderDateTime(note.reminderTime)}</span>
+          </div>
+        ` : '';
+
+        const loveBadgeHtml = (note.category === 'Love' && note.recipient) ? `
+          <div class="notice-love-badge">
+            <span>❤️ For ${sanitizeHtml(note.recipient)}</span>
+          </div>
+        ` : '';
+
+        const expiryBadgeHtml = (note.category === 'Note' && note.expiryHours) ? `
+          <div class="notice-expiry-badge">
+            <span>⏱️ Auto-clears in ${sanitizeHtml(note.expiryHours)}h</span>
+          </div>
+        ` : '';
+
+        let urgentAckHtml = '';
+        if (isUrgent) {
+          const acks = Array.isArray(note.acknowledgedBy) ? note.acknowledgedBy : [];
+          const iAcked = acks.includes(currentProfile);
+          const ackNames = acks.length > 0 ? `Seen by ${acks.join(', ')}` : 'Not yet acknowledged';
+          urgentAckHtml = `
+            <div class="notice-urgent-ack-row">
+              <button type="button" class="notice-urgent-ack-btn ${iAcked ? 'is-acknowledged' : ''}" data-action="acknowledge" data-id="${sanitizeHtml(note.id)}">
+                <span class="material-symbols-rounded">${iAcked ? 'check_circle' : 'visibility'}</span>
+                <span>${iAcked ? 'Seen by you' : 'Mark as Seen'}</span>
+              </button>
+              <span class="notice-urgent-ack-list">${sanitizeHtml(ackNames)}</span>
+            </div>
+          `;
+        }
+
         contentHtml = `
           <div class="notice-card-body">
             <p class="notice-card-text">${sanitizeHtml(note.text)}</p>
+            ${reminderBadgeHtml}
+            ${loveBadgeHtml}
+            ${expiryBadgeHtml}
+            ${urgentAckHtml}
           </div>
         `;
       }
 
+      const convertBtnHtml = (!isList && note.category === 'Note') ? `
+        <button type="button" class="btn-action notice-convert-btn" data-action="convert-to-list" data-id="${sanitizeHtml(note.id)}" aria-label="Convert to checklist" title="Convert to checklist">
+          <span class="material-symbols-rounded">playlist_add</span>
+        </button>
+      ` : '';
+
       return `
-        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isCompleted ? 'is-completed' : ''} ${isList ? 'is-list-card' : ''}" data-note-id="${sanitizeHtml(note.id)}">
+        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isCompleted ? 'is-completed' : ''} ${isList ? 'is-list-card' : ''} ${isUrgent ? 'is-urgent' : ''} ${isLove ? 'is-love' : ''}" data-note-id="${sanitizeHtml(note.id)}">
           <header class="notice-card-header">
             <div class="notice-card-author">
               <span class="member-dot ${dotClass}" aria-hidden="true"></span>
@@ -213,6 +294,7 @@
               ${linkedHtml}
             </div>
             <div class="notice-footer-right">
+              ${convertBtnHtml}
               <button type="button" class="btn-action btn-complete notice-complete-btn ${isCompleted ? 'is-completed' : ''}" data-action="toggle-complete" data-id="${sanitizeHtml(note.id)}" aria-label="${isCompleted ? 'Mark as incomplete' : 'Mark as completed'}" title="${isCompleted ? 'Completed' : 'Mark as completed'}">
                 <span class="material-symbols-rounded">${isCompleted ? 'check_circle' : 'radio_button_unchecked'}</span>
               </button>
@@ -241,6 +323,25 @@
     }).join('');
   }
 
+  function updateCategoryGroupsVisibility(cat) {
+    const reminderGroup = document.getElementById('notice-reminder-time-group');
+    const recipientGroup = document.getElementById('notice-recipient-group');
+    const expiryGroup = document.getElementById('notice-expiry-group');
+
+    if (reminderGroup) {
+      if (cat === 'Reminder') reminderGroup.classList.remove('hidden');
+      else reminderGroup.classList.add('hidden');
+    }
+    if (recipientGroup) {
+      if (cat === 'Love') recipientGroup.classList.remove('hidden');
+      else recipientGroup.classList.add('hidden');
+    }
+    if (expiryGroup) {
+      if (cat === 'Note') expiryGroup.classList.remove('hidden');
+      else expiryGroup.classList.add('hidden');
+    }
+  }
+
   function openNoteModal(noteToEdit) {
     const modal = document.getElementById('notice-modal-backdrop');
     const form = document.getElementById('notice-form');
@@ -252,6 +353,9 @@
     const pinnedCheckbox = document.getElementById('notice-pinned');
     const editIdInput = document.getElementById('notice-edit-id');
     const linkSelect = document.getElementById('notice-linked-list');
+    const reminderTimeInput = document.getElementById('notice-reminder-time');
+    const recipientSelect = document.getElementById('notice-recipient');
+    const expirySelect = document.getElementById('notice-expiry');
     if (!modal) return;
 
     if (form) form.reset();
@@ -271,11 +375,20 @@
       if (authorSelect) authorSelect.value = noteToEdit.author || getActiveUser();
       if (pinnedCheckbox) pinnedCheckbox.checked = Boolean(noteToEdit.pinned);
       if (linkSelect) linkSelect.value = noteToEdit.linkedListId || '';
+      if (reminderTimeInput) reminderTimeInput.value = noteToEdit.reminderTime || '';
+      if (recipientSelect) recipientSelect.value = noteToEdit.recipient || '';
+      if (expirySelect) expirySelect.value = noteToEdit.expiryHours || '';
+      updateCategoryGroupsVisibility(noteToEdit.category || 'Note');
     } else {
       if (titleEl) titleEl.textContent = 'Pin a Note';
       if (submitBtn) submitBtn.textContent = 'Pin Note';
       if (editIdInput) editIdInput.value = '';
       if (authorSelect) authorSelect.value = getActiveUser();
+      if (categorySelect) categorySelect.value = 'Note';
+      if (reminderTimeInput) reminderTimeInput.value = '';
+      if (recipientSelect) recipientSelect.value = '';
+      if (expirySelect) expirySelect.value = '';
+      updateCategoryGroupsVisibility('Note');
     }
 
     modal.classList.remove('hidden');
@@ -290,10 +403,17 @@
     const titleEl = document.getElementById('notice-modal-title');
     const submitBtn = document.getElementById('notice-submit-btn');
     const editIdInput = document.getElementById('notice-edit-id');
+    const reminderTimeInput = document.getElementById('notice-reminder-time');
+    const recipientSelect = document.getElementById('notice-recipient');
+    const expirySelect = document.getElementById('notice-expiry');
     if (!modal) return;
     if (titleEl) titleEl.textContent = 'Pin a Note';
     if (submitBtn) submitBtn.textContent = 'Pin Note';
     if (editIdInput) editIdInput.value = '';
+    if (reminderTimeInput) reminderTimeInput.value = '';
+    if (recipientSelect) recipientSelect.value = '';
+    if (expirySelect) expirySelect.value = '';
+    updateCategoryGroupsVisibility('Note');
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
   }
@@ -321,6 +441,16 @@
     const editIdInput = document.getElementById('notice-edit-id');
     const editId = editIdInput ? editIdInput.value.trim() : '';
 
+    const reminderTimeInput = document.getElementById('notice-reminder-time');
+    const reminderTime = (category === 'Reminder' && reminderTimeInput && reminderTimeInput.value)
+      ? reminderTimeInput.value
+      : null;
+
+    const recipientSelect = document.getElementById('notice-recipient');
+    const expirySelect = document.getElementById('notice-expiry');
+    const recipient = (category === 'Love' && recipientSelect) ? recipientSelect.value : null;
+    const expiryHours = (category === 'Note' && expirySelect) ? expirySelect.value : null;
+
     if (!text) return;
 
     if (submitBtn) {
@@ -335,6 +465,10 @@
           category,
           author,
           pinned,
+          reminderTime,
+          recipient,
+          expiryHours,
+          reminded: false,
           linkedListId: linkedListId || null
         });
 
@@ -350,6 +484,11 @@
           category,
           author,
           pinned,
+          reminderTime,
+          recipient,
+          expiryHours,
+          acknowledgedBy: [],
+          reminded: false,
           linkedListId: linkedListId || null,
           likes: [],
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -361,15 +500,27 @@
           }).catch(err => console.warn('Failed to update bidirectional list link:', err));
         }
 
+        const senderToken = localStorage.getItem('famcal_fcm_token') || null;
+        const notePreview = text.length > 120 ? `${text.slice(0, 117)}...` : text;
+        let notifTitle = `New Note from ${author}`;
+        if (category === 'Urgent') notifTitle = `🚨 URGENT: ${author} posted an alert!`;
+        else if (category === 'Love') notifTitle = recipient ? `❤️ Note for ${recipient} from ${author}` : `❤️ Love Note from ${author}`;
+        else if (category === 'Shoutout') notifTitle = `🎉 Shoutout from ${author}!`;
+        else if (category === 'Reminder' && reminderTime) notifTitle = `⏰ Reminder from ${author}`;
+
+        const remindDetail = (category === 'Reminder' && reminderTime) ? ` (Set for ${formatReminderDateTime(reminderTime)})` : '';
+
         fetch('/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: `${author} pinned a ${category}`,
-            body: text,
-            sender: author
+            title: notifTitle,
+            body: `${notePreview}${remindDetail}`,
+            sender: author,
+            senderToken,
+            url: '/#noticeboard'
           })
-        }).catch(() => {});
+        }).catch((err) => console.warn('Note notification error:', err));
       }
 
       closeNoteModal();
@@ -412,10 +563,27 @@
       return;
     }
 
+    if (action === 'convert-to-list') {
+      const note = currentNotes.find(n => n.id === noteId);
+      if (note && window.FamCalCategoryEnhancements) {
+        await window.FamCalCategoryEnhancements.convertNoteToList(note, db);
+      }
+      return;
+    }
+
+    if (action === 'acknowledge') {
+      if (window.FamCalCategoryEnhancements) {
+        await window.FamCalCategoryEnhancements.toggleAcknowledge(noteId, db, getActiveUser());
+      }
+      return;
+    }
+
     if (action === 'like') {
       const currentProfile = getActiveUser();
       const noteRef = db.collection('noticeboard_notes').doc(noteId);
       const isLiked = btn.classList.contains('is-liked');
+      const note = currentNotes.find(n => n.id === noteId);
+
       try {
         if (isLiked) {
           await noteRef.update({
@@ -425,6 +593,14 @@
           await noteRef.update({
             likes: firebase.firestore.FieldValue.arrayUnion(currentProfile)
           });
+
+          if (note && window.FamCalCategoryEnhancements) {
+            if (note.category === 'Shoutout') {
+              window.FamCalCategoryEnhancements.triggerConfetti();
+            } else if (note.category === 'Love') {
+              window.FamCalCategoryEnhancements.triggerFloatingHearts(btn.getBoundingClientRect());
+            }
+          }
         }
       } catch (err) {
         console.warn('Failed to update reaction:', err);
@@ -501,6 +677,52 @@
     }
   });
 
+  const scheduledReminderTimers = new Map();
+
+  function triggerReminderAlert(note) {
+    const key = `notified_reminder_${note.id}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, 'true');
+
+    if (window.FamCalNotifications && typeof window.FamCalNotifications.showNotification === 'function') {
+      window.FamCalNotifications.showNotification(`⏰ Reminder: ${note.author}`, {
+        body: note.text,
+        tag: `reminder-${note.id}`,
+        data: '/#noticeboard'
+      });
+    }
+
+    if (db) {
+      db.collection('noticeboard_notes').doc(note.id).update({
+        reminded: true
+      }).catch(() => {});
+    }
+  }
+
+  function evaluateScheduledReminders(notes) {
+    const now = Date.now();
+    notes.forEach((note) => {
+      if (note.type !== 'note' || note.category !== 'Reminder' || !note.reminderTime || note.reminded) return;
+
+      const targetTime = new Date(note.reminderTime).getTime();
+      if (isNaN(targetTime)) return;
+      const diffMs = targetTime - now;
+      const timerKey = `reminder_${note.id}_${targetTime}`;
+
+      if (diffMs > 0 && diffMs <= 24 * 60 * 60 * 1000) {
+        if (!scheduledReminderTimers.has(timerKey)) {
+          const tId = setTimeout(() => {
+            scheduledReminderTimers.delete(timerKey);
+            triggerReminderAlert(note);
+          }, diffMs);
+          scheduledReminderTimers.set(timerKey, tId);
+        }
+      } else if (diffMs <= 0 && diffMs >= -10 * 60 * 1000) {
+        triggerReminderAlert(note);
+      }
+    });
+  }
+
   async function initFirestore() {
     try {
       if (typeof window.FamCalGetFirebase === 'function') {
@@ -538,6 +760,7 @@
 
         currentNotes = notes;
         renderNotes(currentNotes);
+        evaluateScheduledReminders(currentNotes);
       }, (err) => {
         console.error('Firestore snapshot error:', err);
         const container = document.getElementById('noticeboard-grid');
@@ -561,6 +784,13 @@
     const form = document.getElementById('notice-form');
     if (form) {
       form.addEventListener('submit', handleAddNote);
+    }
+
+    const categorySelect = document.getElementById('notice-category');
+    if (categorySelect) {
+      categorySelect.addEventListener('change', () => {
+        updateCategoryGroupsVisibility(categorySelect.value);
+      });
     }
 
     const openModalBtn = document.getElementById('open-notice-modal-btn');

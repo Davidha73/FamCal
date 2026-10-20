@@ -13,6 +13,9 @@
     banner.setAttribute('aria-hidden', 'true');
   }
 
+  let waitingWorker = null;
+  let isRefreshing = false;
+
   function setupUpdater() {
     if (!('serviceWorker' in navigator)) return;
 
@@ -21,7 +24,11 @@
 
     if (reloadBtn) {
       reloadBtn.addEventListener('click', () => {
-        window.location.reload();
+        if (waitingWorker) {
+          waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+        } else {
+          window.location.reload();
+        }
       });
     }
 
@@ -29,8 +36,18 @@
       dismissBtn.addEventListener('click', hideUpdateBanner);
     }
 
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const reg of registrations) {
+        const script = reg.active?.scriptURL || reg.waiting?.scriptURL || reg.installing?.scriptURL || '';
+        if (script.includes('firebase-messaging-sw.js')) {
+          reg.unregister();
+        }
+      }
+    });
+
     navigator.serviceWorker.ready.then((registration) => {
       if (registration.waiting && navigator.serviceWorker.controller) {
+        waitingWorker = registration.waiting;
         showUpdateBanner();
       }
 
@@ -40,6 +57,7 @@
 
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            waitingWorker = newWorker;
             showUpdateBanner();
           }
         });
@@ -47,7 +65,9 @@
     });
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      showUpdateBanner();
+      if (isRefreshing) return;
+      isRefreshing = true;
+      window.location.reload();
     });
   }
 

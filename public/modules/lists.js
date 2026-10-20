@@ -251,15 +251,18 @@
           }).catch(err => console.warn('Failed to update bidirectional note link:', err));
         }
 
+        const senderToken = localStorage.getItem('famcal_fcm_token') || null;
         fetch('/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: `${author} pinned a list: ${title}`,
-            body: `${items.length} items to check out!`,
-            sender: author
+            title: `New List from ${author}: ${title}`,
+            body: `${items.length} item${items.length === 1 ? '' : 's'} added.`,
+            sender: author,
+            senderToken,
+            url: '/#lists'
           })
-        }).catch(() => {});
+        }).catch((err) => console.warn('List notification error:', err));
       }
 
       closeListModal();

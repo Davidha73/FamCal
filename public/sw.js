@@ -1,4 +1,10 @@
-const CACHE_NAME = 'famcal-shell-v69';
+try {
+  importScripts('/firebase-messaging-sw.js');
+} catch (err) {
+  console.warn('FCM SW script import failed:', err);
+}
+
+const CACHE_NAME = 'famcal-shell-v75';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -10,6 +16,7 @@ const SHELL_ASSETS = [
   '/modules/updater.js',
   '/modules/navigation.js',
   '/modules/lists.js',
+  '/modules/category-enhancements.js',
   '/modules/noticeboard.js',
   '/modules/messages.js',
   '/app.js',
@@ -18,13 +25,18 @@ const SHELL_ASSETS = [
   '/JustUs Icon.png'
 ];
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(SHELL_ASSETS);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

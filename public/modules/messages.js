@@ -157,15 +157,18 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
+      const senderToken = localStorage.getItem('famcal_fcm_token') || null;
       fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: `${getActiveUser()} sent a message`,
           body: text,
-          sender: getActiveUser()
+          sender: getActiveUser(),
+          senderToken,
+          url: '/#messages'
         })
-      }).catch(() => {});
+      }).catch((err) => console.warn('Message notification error:', err));
 
       if (input) {
         input.value = '';

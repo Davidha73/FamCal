@@ -73,7 +73,13 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      const isAppForeground = windowClients.some((client) => client.visibilityState === 'visible');
+      if (isAppForeground) {
+        return;
+      }
+      return self.registration.showNotification(title, options);
+    })
   );
 });
 
