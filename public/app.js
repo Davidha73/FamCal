@@ -761,6 +761,14 @@ function openForm(isEdit = false) {
   }
 }
 
+window.FamCalOpenEventForm = (prefill = {}) => {
+  openForm(false);
+  if (prefill.summary && eventSummaryInput) {
+    eventSummaryInput.value = prefill.summary;
+    setTimeout(() => eventSummaryInput.focus(), 100);
+  }
+};
+
 if (eventMemberSelect) {
   eventMemberSelect.addEventListener('change', () => {
     syncEventMemberUI(eventMemberSelect.value);

@@ -214,7 +214,7 @@
                     <label class="list-checkbox-label">
                       <input type="checkbox" class="list-checkbox-input" data-list-id="${sanitizeHtml(note.id)}" data-item-id="${sanitizeHtml(it.id)}" ${it.done ? 'checked' : ''}>
                       <span class="list-checkbox-custom"></span>
-                      <span class="list-item-text">${sanitizeHtml(it.text)}</span>
+                      <span class="list-item-text">${window.FamCalMentions ? window.FamCalMentions.formatMentions(sanitizeHtml(it.text)) : sanitizeHtml(it.text)}</span>
                     </label>
                   </li>
                 `).join('')}
@@ -260,7 +260,7 @@
 
         contentHtml = `
           <div class="notice-card-body">
-            <p class="notice-card-text">${sanitizeHtml(note.text)}</p>
+            <p class="notice-card-text">${window.FamCalMentions ? window.FamCalMentions.formatMentions(sanitizeHtml(note.text)) : sanitizeHtml(note.text)}</p>
             ${reminderBadgeHtml}
             ${loveBadgeHtml}
             ${expiryBadgeHtml}
@@ -269,8 +269,14 @@
         `;
       }
 
+      const isMentioned = window.FamCalMentions && (
+        window.FamCalMentions.isUserMentioned(note.text, currentProfile) ||
+        (isList && Array.isArray(note.items) && note.items.some(it => window.FamCalMentions.isUserMentioned(it.text, currentProfile))) ||
+        (isList && window.FamCalMentions.isUserMentioned(note.title, currentProfile))
+      );
+
       return `
-        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isCompleted ? 'is-completed' : ''} ${isList ? 'is-list-card' : ''} ${isUrgent ? 'is-urgent' : ''} ${isLove ? 'is-love' : ''}" data-note-id="${sanitizeHtml(note.id)}">
+        <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isCompleted ? 'is-completed' : ''} ${isList ? 'is-list-card' : ''} ${isUrgent ? 'is-urgent' : ''} ${isLove ? 'is-love' : ''} ${isMentioned ? 'is-mentioned' : ''}" data-note-id="${sanitizeHtml(note.id)}">
           <header class="notice-card-header">
             <div class="notice-card-author">
               <span class="member-dot ${dotClass}" aria-hidden="true"></span>
@@ -278,6 +284,7 @@
               <span class="notice-timestamp">${sanitizeHtml(timeStr)}</span>
             </div>
             <div class="notice-card-badges">
+              ${isMentioned ? '<span class="mention-tag">Mentioned you</span>' : ''}
               <span class="notice-category-tag category-${isList ? 'list' : category.toLowerCase()}">${sanitizeHtml(categoryLabel)}</span>
               ${isPinned ? '<span class="notice-pin-indicator" title="Pinned note"><span class="material-symbols-rounded">push_pin</span></span>' : ''}
             </div>
@@ -376,6 +383,7 @@
       if (titleEl) titleEl.textContent = 'Pin a Note';
       if (submitBtn) submitBtn.textContent = 'Pin Note';
       if (editIdInput) editIdInput.value = '';
+      if (textInput) textInput.value = (noteToEdit && noteToEdit.text) ? noteToEdit.text : '';
       if (authorSelect) authorSelect.value = getActiveUser();
       if (categorySelect) categorySelect.value = 'Note';
       if (reminderTimeInput) reminderTimeInput.value = '';
@@ -502,6 +510,7 @@
         else if (category === 'Reminder' && reminderTime) notifTitle = `⏰ Reminder from ${author}`;
 
         const remindDetail = (category === 'Reminder' && reminderTime) ? ` (Set for ${formatReminderDateTime(reminderTime)})` : '';
+        const mentions = window.FamCalMentions ? window.FamCalMentions.extractMentions(text) : [];
 
         fetch('/api/notify', {
           method: 'POST',
@@ -511,6 +520,7 @@
             body: `${notePreview}${remindDetail}`,
             sender: author,
             senderToken,
+            mentions,
             url: '/#noticeboard'
           })
         }).catch((err) => console.warn('Note notification error:', err));
@@ -845,6 +855,11 @@
       });
     }
 
+    const noticeText = document.getElementById('notice-text');
+    if (noticeText && window.FamCalMentions) {
+      window.FamCalMentions.attachAutocomplete(noticeText);
+    }
+
     window.addEventListener('famcal-firebase-ready', (e) => {
       if (e.detail && e.detail.db) {
         db = e.detail.db;
@@ -872,4 +887,5 @@
   }
 
   window.FamCalGetNotes = () => currentNotes;
+  window.FamCalOpenNoteModal = openNoteModal;
 })();

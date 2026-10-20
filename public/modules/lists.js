@@ -73,7 +73,7 @@
     return row;
   }
 
-  function openListModal() {
+  function openListModal(prefill = null) {
     const modal = document.getElementById('list-modal-backdrop');
     const form = document.getElementById('list-form');
     const editIdInput = document.getElementById('list-edit-id');
@@ -106,7 +106,12 @@
     modal.setAttribute('aria-hidden', 'false');
 
     const titleInput = document.getElementById('list-title');
-    if (titleInput) setTimeout(() => titleInput.focus(), 100);
+    if (titleInput) {
+      if (prefill && prefill.title) {
+        titleInput.value = prefill.title;
+      }
+      setTimeout(() => titleInput.focus(), 100);
+    }
   }
 
   function editList(listId) {

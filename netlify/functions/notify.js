@@ -138,7 +138,9 @@ exports.handler = async (event) => {
 
       // If senderToken is not provided and user matches sender, skip to avoid self-notification
       if (!senderToken && !isTest && sender && user === sender) return null;
-      if (!token) return null;
+      const mentions = Array.isArray(payload.mentions) ? payload.mentions.map(m => String(m).toLowerCase()) : [];
+      const isMentioned = mentions.includes(user) || (user === 'olivia' && mentions.includes('liv')) || (user === 'liv' && mentions.includes('olivia'));
+      const docTitle = isMentioned ? `💬 ${payload.sender || 'Someone'} mentioned you` : title;
 
       const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
       return fetch(fcmUrl, {
@@ -151,12 +153,12 @@ exports.handler = async (event) => {
           message: {
             token,
             notification: {
-              title,
+              title: docTitle,
               body
             },
             data: {
               url: targetUrl,
-              title,
+              title: docTitle,
               body
             },
             webpush: {
@@ -165,7 +167,7 @@ exports.handler = async (event) => {
                 TTL: '86400'
               },
               notification: {
-                title,
+                title: docTitle,
                 body,
                 icon: '/JustUs Icon.png',
                 badge: '/JustUs Icon.png',
@@ -183,7 +185,7 @@ exports.handler = async (event) => {
               payload: {
                 aps: {
                   alert: {
-                    title,
+                    title: docTitle,
                     body
                   },
                   sound: 'default',

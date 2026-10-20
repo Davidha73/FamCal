@@ -3,6 +3,7 @@
 
   let db = null;
   let unsubscribeMessages = null;
+  let currentMessages = [];
 
   function getActiveUser() {
     return localStorage.getItem('famcal-user-profile') || 'Dad';
@@ -75,6 +76,7 @@
     }
 
     const currentProfile = getActiveUser();
+    currentMessages = messages;
 
     feed.innerHTML = messages.map(msg => {
       const isMine = (msg.author || '').toLowerCase() === currentProfile.toLowerCase();
@@ -83,20 +85,44 @@
       const dateObj = msg.createdAt ? (msg.createdAt.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt)) : new Date();
       const timeStr = formatMessageTime(dateObj);
 
+      const isMentioned = window.FamCalMentions && window.FamCalMentions.isUserMentioned(msg.text, currentProfile);
+      const textHtml = window.FamCalMentions
+        ? window.FamCalMentions.formatMentions(sanitizeHtml(msg.text))
+        : sanitizeHtml(msg.text);
+
+      let linkedHtml = '';
+      if (msg.linkedId) {
+        const icon = msg.linkedType === 'list' ? 'checklist' : 'sticky_note_2';
+        const typeLabel = msg.linkedType === 'list' ? 'List' : 'Note';
+        linkedHtml = `
+          <div class="chat-linked-row">
+            <button type="button" class="notice-linked-pill" data-scroll-to="${sanitizeHtml(msg.linkedId)}" title="Jump to linked ${typeLabel}">
+              <span class="material-symbols-rounded">${icon}</span>
+              <span class="notice-linked-text">Linked ${typeLabel}: ${sanitizeHtml(msg.linkedTitle || typeLabel)}</span>
+            </button>
+          </div>
+        `;
+      }
+
       return `
-        <div class="chat-message-row ${isMine ? 'is-outgoing' : 'is-incoming'}" data-message-id="${sanitizeHtml(msg.id)}">
+        <div class="chat-message-row ${isMine ? 'is-outgoing' : 'is-incoming'} ${isMentioned ? 'is-mentioned' : ''}" data-message-id="${sanitizeHtml(msg.id)}">
           <div class="chat-bubble">
             <div class="chat-bubble-header">
               <span class="member-dot ${dotClass}"></span>
               <span class="chat-bubble-author ${authorClass}">${sanitizeHtml(msg.author || 'Family')}</span>
               <span class="chat-bubble-time">${sanitizeHtml(timeStr)}</span>
+              ${isMentioned ? '<span class="mention-tag">Mentioned you</span>' : ''}
+              <button type="button" class="chat-convert-btn" data-action="convert-message" data-id="${sanitizeHtml(msg.id)}" aria-label="Copy to note, list or event" title="Copy to note, list or event">
+                <span class="material-symbols-rounded">drive_file_move</span>
+              </button>
               ${isMine ? `
                 <button type="button" class="chat-delete-btn" data-action="delete-message" data-id="${sanitizeHtml(msg.id)}" aria-label="Delete message" title="Delete message">
                   <span class="material-symbols-rounded">close</span>
                 </button>
               ` : ''}
             </div>
-            <p class="chat-bubble-text">${sanitizeHtml(msg.text)}</p>
+            <p class="chat-bubble-text">${textHtml}</p>
+            ${linkedHtml}
           </div>
         </div>
       `;
@@ -151,13 +177,28 @@
     if (sendBtn) sendBtn.disabled = true;
 
     try {
-      await database.collection('family_messages').add({
+      const attachment = window.FamCalMessageLinks ? window.FamCalMessageLinks.getPendingAttachment() : null;
+
+      const messageDoc = {
         text,
         author: getActiveUser(),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+
+      if (attachment) {
+        messageDoc.linkedId = attachment.id;
+        messageDoc.linkedType = attachment.type;
+        messageDoc.linkedTitle = attachment.title;
+      }
+
+      await database.collection('family_messages').add(messageDoc);
+
+      if (window.FamCalMessageLinks) {
+        window.FamCalMessageLinks.clearPendingAttachment();
+      }
 
       const senderToken = localStorage.getItem('famcal_fcm_token') || null;
+      const mentions = window.FamCalMentions ? window.FamCalMentions.extractMentions(text) : [];
       fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -166,6 +207,7 @@
           body: text,
           sender: getActiveUser(),
           senderToken,
+          mentions,
           url: '/#messages'
         })
       }).catch((err) => console.warn('Message notification error:', err));
@@ -231,6 +273,30 @@
   }
 
   async function handleMessageActions(e) {
+    const convertBtn = e.target.closest('button[data-action="convert-message"]');
+    if (convertBtn) {
+      const msgId = convertBtn.dataset.id;
+      const msg = currentMessages.find(m => m.id === msgId);
+      if (msg && window.FamCalMessageLinks) {
+        window.FamCalMessageLinks.openConvertMenu(msg, convertBtn);
+      }
+      return;
+    }
+
+    const pill = e.target.closest('.notice-linked-pill');
+    if (pill) {
+      const targetId = pill.dataset.scrollTo;
+      if (targetId && typeof window.FamCalSwitchTab === 'function') {
+        window.FamCalSwitchTab('noticeboard');
+        setTimeout(() => {
+          if (window.FamCalLists && typeof window.FamCalLists.scrollAndHighlight === 'function') {
+            window.FamCalLists.scrollAndHighlight(targetId);
+          }
+        }, 150);
+      }
+      return;
+    }
+
     const btn = e.target.closest('button[data-action="delete-message"]');
     if (!btn) return;
     const database = await ensureDb();
@@ -333,6 +399,12 @@
     const clearBtn = document.getElementById('messages-clear-btn');
     if (clearBtn) {
       clearBtn.addEventListener('click', handleClearAllMessages);
+    }
+
+    const input = document.getElementById('messages-input');
+    if (input) {
+      if (window.FamCalMentions) window.FamCalMentions.attachAutocomplete(input);
+      if (window.FamCalMessageLinks) window.FamCalMessageLinks.attachSlashCommands(input);
     }
 
     window.addEventListener('famcal-firebase-ready', (e) => {
