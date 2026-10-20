@@ -1,12 +1,10 @@
-## [2026-10-20T18:04:45+01:00 / v2.30.41]
+## [2026-10-20T19:41:00+01:00 / v2.30.45]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Implemented category enhancements across all notice types via modular `category-enhancements.js`: Urgent notes auto-float with acknowledgment receipts, Shoutout notes trigger canvas confetti bursts on like, Love notes support recipient targeting and floating heart animations, and general Notes support auto-expiry timers and one-tap conversion to interactive checklists.
+- **Status:** Encapsulated calendar view and Add Event button inside a zero-padding sticky container (`.calendar-fixed-container`), fixing them beneath the top header so only the event cards below scroll.
 - **Files Changed:**
-  - `public/modules/category-enhancements.js`
-  - `public/modules/noticeboard.js`
   - `public/index.html`
   - `public/style.css`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Refresh JustUs, test posting an Urgent note to verify the acknowledgment button, post a Love note with a recipient, heart a Shoutout to view confetti, and convert a Note to a checklist.
+- **Next Objectives:** Refresh JustUs, verify that the calendar and Add Event button remain fixed together at the top when scrolling, and confirm the upcoming event feed scrolls smoothly underneath.

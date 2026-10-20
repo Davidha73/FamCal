@@ -134,30 +134,6 @@
     }
   }
 
-  // Convert Note to Interactive Checklist
-  async function convertNoteToList(note, db) {
-    if (!db || !note || !note.id) return;
-    const lines = (note.text || '')
-      .split('\n')
-      .map(l => l.replace(/^[-*•\d.)\]\s]+/, '').trim())
-      .filter(Boolean);
-
-    const items = lines.length > 0
-      ? lines.map((text, idx) => ({ id: `item_${Date.now()}_${idx}`, text, completed: false }))
-      : [{ id: `item_${Date.now()}_0`, text: note.text || 'Item', completed: false }];
-
-    const title = note.text ? (note.text.split('\n')[0].slice(0, 40)) : 'New List';
-
-    await db.collection('noticeboard_notes').doc(note.id).update({
-      type: 'list',
-      title,
-      items,
-      category: 'List',
-      convertedFromNote: true,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
-
   // Auto-expiry check
   function isNoteExpired(note) {
     if (!note.expiryHours) return false;
@@ -180,7 +156,6 @@
     triggerConfetti,
     triggerFloatingHearts,
     toggleAcknowledge,
-    convertNoteToList,
     isNoteExpired
   };
 })();

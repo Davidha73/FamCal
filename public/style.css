@@ -265,11 +265,22 @@ body {
   box-sizing: border-box;
 }
 
-/* Calendar View Card */
-.calendar-card {
+/* Calendar Fixed Container */
+.calendar-fixed-container {
   position: sticky;
   top: calc(64px + env(safe-area-inset-top, 0px));
   z-index: 20;
+  padding: 0;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+/* Calendar View Card */
+.calendar-card {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
@@ -1743,6 +1754,84 @@ body.keyboard-open #messages-view-container {
   padding: 8px 16px;
   gap: 4px;
   border-radius: var(--radius-pill);
+}
+
+/* Noticeboard Pin Dropdown Submenu */
+.notice-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notice-menu-arrow {
+  font-size: 18px;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.notice-menu-wrapper.is-open .notice-menu-arrow {
+  transform: rotate(180deg);
+}
+
+.notice-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 155px;
+  background-color: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  animation: noticeMenuFade 0.16s ease-out;
+}
+
+.notice-dropdown-menu.hidden {
+  display: none;
+}
+
+@keyframes noticeMenuFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notice-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  width: 100%;
+}
+
+.notice-dropdown-item:hover,
+.notice-dropdown-item:focus-visible {
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.notice-dropdown-item .material-symbols-rounded {
+  font-size: 18px;
+  color: var(--accent-primary);
 }
 
 /* Noticeboard Cards Grid */

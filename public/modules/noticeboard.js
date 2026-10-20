@@ -269,12 +269,6 @@
         `;
       }
 
-      const convertBtnHtml = (!isList && note.category === 'Note') ? `
-        <button type="button" class="btn-action notice-convert-btn" data-action="convert-to-list" data-id="${sanitizeHtml(note.id)}" aria-label="Convert to checklist" title="Convert to checklist">
-          <span class="material-symbols-rounded">playlist_add</span>
-        </button>
-      ` : '';
-
       return `
         <article class="notice-card author-border-${authorKey} ${isPinned ? 'is-pinned' : ''} ${isCompleted ? 'is-completed' : ''} ${isList ? 'is-list-card' : ''} ${isUrgent ? 'is-urgent' : ''} ${isLove ? 'is-love' : ''}" data-note-id="${sanitizeHtml(note.id)}">
           <header class="notice-card-header">
@@ -294,7 +288,6 @@
               ${linkedHtml}
             </div>
             <div class="notice-footer-right">
-              ${convertBtnHtml}
               <button type="button" class="btn-action btn-complete notice-complete-btn ${isCompleted ? 'is-completed' : ''}" data-action="toggle-complete" data-id="${sanitizeHtml(note.id)}" aria-label="${isCompleted ? 'Mark as incomplete' : 'Mark as completed'}" title="${isCompleted ? 'Completed' : 'Mark as completed'}">
                 <span class="material-symbols-rounded">${isCompleted ? 'check_circle' : 'radio_button_unchecked'}</span>
               </button>
@@ -563,14 +556,6 @@
       return;
     }
 
-    if (action === 'convert-to-list') {
-      const note = currentNotes.find(n => n.id === noteId);
-      if (note && window.FamCalCategoryEnhancements) {
-        await window.FamCalCategoryEnhancements.convertNoteToList(note, db);
-      }
-      return;
-    }
-
     if (action === 'acknowledge') {
       if (window.FamCalCategoryEnhancements) {
         await window.FamCalCategoryEnhancements.toggleAcknowledge(noteId, db, getActiveUser());
@@ -793,9 +778,54 @@
       });
     }
 
+    const menu = document.getElementById('notice-dropdown-menu');
+    const wrapper = document.getElementById('notice-menu-wrapper');
+    const triggerBtn = document.getElementById('notice-menu-trigger-btn');
+
+    function closeNoticeMenu() {
+      if (menu) menu.classList.add('hidden');
+      if (wrapper) wrapper.classList.remove('is-open');
+      if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleNoticeMenu() {
+      if (!menu) return;
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        if (wrapper) wrapper.classList.add('is-open');
+        if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'true');
+      } else {
+        closeNoticeMenu();
+      }
+    }
+
+    if (triggerBtn) {
+      triggerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleNoticeMenu();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (wrapper && !wrapper.contains(e.target)) {
+        closeNoticeMenu();
+      }
+    });
+
     const openModalBtn = document.getElementById('open-notice-modal-btn');
     if (openModalBtn) {
-      openModalBtn.addEventListener('click', openNoteModal);
+      openModalBtn.addEventListener('click', () => {
+        closeNoticeMenu();
+        openNoteModal();
+      });
+    }
+
+    const openListBtn = document.getElementById('open-list-modal-btn');
+    if (openListBtn) {
+      openListBtn.addEventListener('click', () => {
+        closeNoticeMenu();
+      });
     }
 
     const closeModalBtn = document.getElementById('notice-modal-close-btn');

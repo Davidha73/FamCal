@@ -41,43 +41,45 @@
 
   <main class="app-main">
     <div id="calendar-view-container" class="view-container">
-      <section class="calendar-card" aria-label="Calendar View">
-      <div class="calendar-top-bar">
-        <div class="calendar-view-segmented" role="tablist" aria-label="Calendar View Selection">
-          <button type="button" id="view-month-btn" class="segmented-btn is-active" role="tab" aria-selected="true">Month</button>
-          <button type="button" id="view-week-btn" class="segmented-btn" role="tab" aria-selected="false">Week</button>
+      <div id="calendar-fixed-container" class="calendar-fixed-container">
+        <section class="calendar-card" aria-label="Calendar View">
+        <div class="calendar-top-bar">
+          <div class="calendar-view-segmented" role="tablist" aria-label="Calendar View Selection">
+            <button type="button" id="view-month-btn" class="segmented-btn is-active" role="tab" aria-selected="true">Month</button>
+            <button type="button" id="view-week-btn" class="segmented-btn" role="tab" aria-selected="false">Week</button>
+          </div>
+          <button id="today-btn" class="btn-today-action" type="button" aria-label="Jump to Today" title="Today">
+            <span class="material-symbols-rounded">today</span>
+          </button>
         </div>
-        <button id="today-btn" class="btn-today-action" type="button" aria-label="Jump to Today" title="Today">
-          <span class="material-symbols-rounded">today</span>
-        </button>
-      </div>
 
-      <div class="calendar-header">
-        <button id="prev-period-btn" class="calendar-nav-btn" aria-label="Previous">
-          <span class="material-symbols-rounded">chevron_left</span>
-        </button>
-        <div class="calendar-month-group">
-          <h2 id="calendar-month-year" class="calendar-month-title">Month Year</h2>
+        <div class="calendar-header">
+          <button id="prev-period-btn" class="calendar-nav-btn" aria-label="Previous">
+            <span class="material-symbols-rounded">chevron_left</span>
+          </button>
+          <div class="calendar-month-group">
+            <h2 id="calendar-month-year" class="calendar-month-title">Month Year</h2>
+          </div>
+          <button id="next-period-btn" class="calendar-nav-btn" aria-label="Next">
+            <span class="material-symbols-rounded">chevron_right</span>
+          </button>
         </div>
-        <button id="next-period-btn" class="calendar-nav-btn" aria-label="Next">
-          <span class="material-symbols-rounded">chevron_right</span>
+
+        <div class="calendar-weekdays" aria-hidden="true">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+
+        <div id="calendar-days-grid" class="calendar-days-grid" role="grid">
+          <!-- Days will be dynamically generated -->
+        </div>
+      </section>
+
+      <div class="calendar-action-bar">
+        <button id="toggle-form-btn" class="btn btn-primary btn-add-event" aria-label="Add Event">
+          <span class="material-symbols-rounded">add</span>
+          <span>Add Event</span>
         </button>
       </div>
-
-      <div class="calendar-weekdays" aria-hidden="true">
-        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-      </div>
-
-      <div id="calendar-days-grid" class="calendar-days-grid" role="grid">
-        <!-- Days will be dynamically generated -->
-      </div>
-    </section>
-
-    <div class="calendar-action-bar">
-      <button id="toggle-form-btn" class="btn btn-primary btn-add-event" aria-label="Add Event">
-        <span class="material-symbols-rounded">add</span>
-        <span>Add Event</span>
-      </button>
     </div>
 
     <div id="form-drawer" class="modal-backdrop hidden" aria-hidden="true">
@@ -211,14 +213,23 @@
             <span class="noticeboard-subtitle">Family messages & updates</span>
           </div>
           <div class="noticeboard-actions">
-            <button type="button" id="open-notice-modal-btn" class="btn btn-primary btn-add-notice" aria-label="Pin Note">
-              <span class="material-symbols-rounded">add</span>
-              <span>Pin Note</span>
-            </button>
-            <button type="button" id="open-list-modal-btn" class="btn btn-secondary btn-add-list" aria-label="Pin List">
-              <span class="material-symbols-rounded">checklist</span>
-              <span>Pin List</span>
-            </button>
+            <div class="notice-menu-wrapper" id="notice-menu-wrapper">
+              <button type="button" id="notice-menu-trigger-btn" class="btn btn-primary btn-add-notice" aria-haspopup="true" aria-expanded="false" aria-label="Pin to noticeboard">
+                <span class="material-symbols-rounded">add</span>
+                <span>Pin</span>
+                <span class="material-symbols-rounded notice-menu-arrow">expand_more</span>
+              </button>
+              <div id="notice-dropdown-menu" class="notice-dropdown-menu hidden" role="menu">
+                <button type="button" id="open-notice-modal-btn" class="notice-dropdown-item" role="menuitem">
+                  <span class="material-symbols-rounded">add</span>
+                  <span>Pin Note</span>
+                </button>
+                <button type="button" id="open-list-modal-btn" class="notice-dropdown-item" role="menuitem">
+                  <span class="material-symbols-rounded">checklist</span>
+                  <span>Pin List</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
