@@ -46,7 +46,6 @@
 
   async function requestPermission() {
     if (!('Notification' in window)) {
-      alert('Notifications are not supported by this browser.');
       return false;
     }
     const result = await Notification.requestPermission();
@@ -68,39 +67,38 @@
 
   function updateUI() {
     const statusText = document.getElementById('notification-status-text');
-    const notifIcon = document.getElementById('notification-icon');
+    const toggleInput = document.getElementById('notification-toggle-input');
     const iosHint = document.getElementById('notification-ios-hint');
 
     if (isIos() && !isStandalone()) {
       if (iosHint) iosHint.classList.remove('hidden');
-      if (statusText) statusText.textContent = 'Add to Home Screen first';
-      if (notifIcon) notifIcon.textContent = 'install_mobile';
-      return;
     } else {
       if (iosHint) iosHint.classList.add('hidden');
     }
 
-    if (!('Notification' in window)) {
-      if (statusText) statusText.textContent = 'Not supported on this browser';
-      if (notifIcon) notifIcon.textContent = 'notifications_off';
+    const userPref = localStorage.getItem('famcal_notifications_enabled');
+    const hasNotificationApi = ('Notification' in window);
+
+    if (userPref === 'false') {
+      if (statusText) statusText.textContent = 'Disabled';
+      if (toggleInput) toggleInput.checked = false;
       return;
     }
 
-    const permission = Notification.permission;
-
-    if (permission === 'granted') {
-      if (currentDeviceToken) {
-        if (statusText) statusText.textContent = 'Active (Push Connected)';
-      } else {
-        if (statusText) statusText.textContent = 'Active (Messages, Notes, Lists & Events)';
+    if (hasNotificationApi && Notification.permission === 'granted') {
+      if (statusText) {
+        statusText.textContent = currentDeviceToken ? 'Active (Push Connected)' : 'Active (Notifications Enabled)';
       }
-      if (notifIcon) notifIcon.textContent = 'notifications_active';
-    } else if (permission === 'denied') {
-      if (statusText) statusText.textContent = 'Blocked in iPhone Settings';
-      if (notifIcon) notifIcon.textContent = 'notifications_off';
+      if (toggleInput) toggleInput.checked = true;
+    } else if (hasNotificationApi && Notification.permission === 'denied') {
+      if (statusText) statusText.textContent = 'Blocked in Phone Settings';
+      if (toggleInput) toggleInput.checked = false;
+    } else if (userPref === 'true') {
+      if (statusText) statusText.textContent = 'Enabled';
+      if (toggleInput) toggleInput.checked = true;
     } else {
       if (statusText) statusText.textContent = 'Tap to enable';
-      if (notifIcon) notifIcon.textContent = 'notifications';
+      if (toggleInput) toggleInput.checked = false;
     }
   }
 
@@ -266,53 +264,6 @@
     }
   }
 
-  async function sendTestAlert() {
-    const testBtn = document.getElementById('notification-test-btn');
-    if (testBtn) {
-      testBtn.disabled = true;
-      testBtn.textContent = 'Sending...';
-    }
-    try {
-      if (!('Notification' in window)) {
-        alert('Notifications are not supported by this browser.');
-        return;
-      }
-      if (Notification.permission !== 'granted') {
-        const granted = await requestPermission();
-        if (!granted) {
-          alert('Notification permission is required to send a test alert.');
-          return;
-        }
-      }
-      if (!currentDeviceToken) {
-        await registerFCMToken(false);
-      }
-      if (!currentDeviceToken) {
-        alert('No device token found on this iPhone yet. Tap the Push Alerts button above to register first.');
-        return;
-      }
-      const res = await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'JustUs Test Alert',
-          body: 'Push notifications are working on this iPhone!',
-          sender: 'test',
-          isTest: true,
-          targetToken: currentDeviceToken
-        })
-      });
-      const data = await res.json();
-      alert(data.message || JSON.stringify(data));
-    } catch (err) {
-      alert('Failed to send test alert: ' + err.message);
-    } finally {
-      if (testBtn) {
-        testBtn.disabled = false;
-        testBtn.textContent = 'Test';
-      }
-    }
-  }
 
   async function initNotifications() {
     if ('serviceWorker' in navigator) {
@@ -321,43 +272,29 @@
       } catch (_) {}
     }
 
-    const toggleBtn = document.getElementById('notification-toggle-btn');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', async () => {
-        if (isIos() && !isStandalone()) {
-          alert('On iPhone, push notifications require JustUs to be added to your Home Screen.\n\n1. Tap Safari\'s Share button (square with arrow up)\n2. Tap "Add to Home Screen"\n3. Open JustUs from your Home Screen and enable notifications in Settings.');
+    const toggleInput = document.getElementById('notification-toggle-input');
+    if (toggleInput) {
+      toggleInput.addEventListener('change', async () => {
+        const wantsOn = toggleInput.checked;
+        localStorage.setItem('famcal_notifications_enabled', wantsOn ? 'true' : 'false');
+
+        if (!wantsOn) {
+          updateUI();
           return;
         }
 
-        if (!('Notification' in window)) {
-          alert('Notifications are not supported by this browser.');
-          return;
-        }
-
-        if (Notification.permission === 'granted') {
-          showNotification('JustUs Notifications Active', {
-            body: 'You will receive alerts for new family messages and calendar events.'
-          });
-          registerFCMToken(true);
-        } else if (Notification.permission === 'denied') {
-          alert('Notifications are blocked in device settings. Open your iPhone Settings > Notifications > JustUs to allow notifications.');
-        } else {
-          const granted = await requestPermission();
-          if (granted) {
-            registerFCMToken(true);
-            showNotification('JustUs Notifications Enabled', {
-              body: 'Push alerts are now enabled for family messages and events.'
-            });
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            registerFCMToken(false);
+          } else if (Notification.permission === 'default') {
+            const granted = await requestPermission();
+            if (granted) registerFCMToken(false);
           }
         }
         updateUI();
       });
     }
 
-    const testBtn = document.getElementById('notification-test-btn');
-    if (testBtn) {
-      testBtn.addEventListener('click', sendTestAlert);
-    }
 
     updateUI();
 

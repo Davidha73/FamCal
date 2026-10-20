@@ -1073,6 +1073,7 @@ if (todayBtn) {
 
 function openSettingsDrawer() {
   if (settingsDrawer && settingsDrawerBackdrop) {
+    document.body.classList.add('drawer-open');
     settingsDrawerBackdrop.classList.remove('hidden');
     settingsDrawer.classList.add('is-open');
     settingsDrawer.setAttribute('aria-hidden', 'false');
@@ -1081,6 +1082,7 @@ function openSettingsDrawer() {
 
 function closeSettingsDrawer() {
   if (settingsDrawer && settingsDrawerBackdrop) {
+    document.body.classList.remove('drawer-open');
     settingsDrawer.classList.remove('is-open');
     settingsDrawer.setAttribute('aria-hidden', 'true');
     settingsDrawerBackdrop.classList.add('hidden');

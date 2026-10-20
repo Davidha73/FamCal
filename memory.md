@@ -1,9 +1,9 @@
-## [2026-10-20T19:48:30+01:00 / v2.30.46]
+## [2026-10-20T20:08:10+01:00 / v2.30.54]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Docked the calendar container directly to the header via a negative top margin with integrated top padding, maintaining the visual gap permanently while eliminating initial scroll travel so the calendar stays completely motionless.
+- **Status:** Removed the artificial iOS standalone lock that was forcibly resetting the push alerts toggle to OFF, enabling the switch to flip and persist freely.
 - **Files Changed:**
-  - `public/style.css`
+  - `public/modules/notifications.js`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Refresh JustUs on iPhone, verify that scrolling the event cards causes zero movement in the calendar card and Add Event button, and confirm the top spacing beneath the header remains stable.
+- **Next Objectives:** Refresh JustUs, tap the Push Alerts toggle, and verify that the switch slides smoothly to the ON state.

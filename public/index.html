@@ -206,7 +206,8 @@
     </div>
 
     <div id="noticeboard-view-container" class="view-container hidden">
-      <header class="noticeboard-card noticeboard-header-card" aria-label="Family Noticeboard Header">
+      <div id="noticeboard-fixed-container" class="noticeboard-fixed-container">
+        <header class="noticeboard-card noticeboard-header-card" aria-label="Family Noticeboard Header">
         <div class="noticeboard-top-bar">
           <div class="noticeboard-title-group">
             <h2 class="noticeboard-title">Noticeboard</h2>
@@ -238,6 +239,7 @@
           <span id="noticeboard-count" class="feed-counter">0 items</span>
         </div>
       </header>
+      </div>
 
       <div id="noticeboard-grid" class="noticeboard-grid">
         <div class="empty-state noticeboard-empty">
@@ -317,16 +319,10 @@
             <span class="settings-row-label">Push Alerts</span>
             <span id="notification-status-text" class="settings-row-sub">Tap to enable</span>
           </div>
-          <button type="button" id="notification-toggle-btn" class="icon-button icon-button-ghost" aria-label="Toggle Notifications">
-            <span id="notification-icon" class="material-symbols-rounded">notifications</span>
-          </button>
-        </div>
-        <div id="notification-test-row" class="settings-row settings-test-row">
-          <div class="settings-row-info">
-            <span class="settings-row-label">Test Push</span>
-            <span class="settings-row-sub">Send a sample alert to this phone</span>
-          </div>
-          <button type="button" id="notification-test-btn" class="btn btn-secondary btn-sm" aria-label="Send Test Alert">Test</button>
+          <label class="toggle-switch" title="Toggle Push Alerts">
+            <input type="checkbox" id="notification-toggle-input" class="toggle-switch-input" aria-label="Toggle Push Alerts">
+            <span class="toggle-switch-track"></span>
+          </label>
         </div>
         <p id="notification-ios-hint" class="settings-hint notification-ios-hint hidden">On iPhone, tap Share &rarr; "Add to Home Screen" to enable iOS push notifications.</p>
       </section>
