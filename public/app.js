@@ -675,6 +675,7 @@ function renderDayEvents() {
         <p class="state-text">No family events for ${formattedDay}. Tap + to add one.</p>
       </div>
     `;
+    window.dispatchEvent(new CustomEvent('famcal-events-rendered'));
     return;
   }
 
@@ -731,6 +732,7 @@ function renderDayEvents() {
 
     calendarEventsContainer.appendChild(card);
   });
+  window.dispatchEvent(new CustomEvent('famcal-events-rendered'));
 }
 
 function openForm(isEdit = false) {

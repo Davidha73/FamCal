@@ -78,6 +78,10 @@
     const currentProfile = getActiveUser();
     currentMessages = messages;
 
+    if (window.FamCalReadReceipts && typeof window.FamCalReadReceipts.markMessagesAsRead === 'function') {
+      window.FamCalReadReceipts.markMessagesAsRead(messages);
+    }
+
     feed.innerHTML = messages.map(msg => {
       const isMine = (msg.author || '').toLowerCase() === currentProfile.toLowerCase();
       const authorClass = `user-${(msg.author || 'other').toLowerCase()}`;
@@ -104,36 +108,90 @@
         `;
       }
 
-      return `
-        <div class="chat-message-row ${isMine ? 'is-outgoing' : 'is-incoming'} ${isMentioned ? 'is-mentioned' : ''}" data-message-id="${sanitizeHtml(msg.id)}">
-          <div class="chat-bubble">
-            <div class="chat-bubble-header">
-              <span class="member-dot ${dotClass}"></span>
-              <span class="chat-bubble-author ${authorClass}">${sanitizeHtml(msg.author || 'Family')}</span>
-              <span class="chat-bubble-time">${sanitizeHtml(timeStr)}</span>
-              ${isMentioned ? '<span class="mention-tag">Mentioned you</span>' : ''}
-              <button type="button" class="chat-convert-btn" data-action="convert-message" data-id="${sanitizeHtml(msg.id)}" aria-label="Copy to note, list or event" title="Copy to note, list or event">
-                <span class="material-symbols-rounded">drive_file_move</span>
+      const bubbleContent = `
+        <div class="chat-bubble">
+          <div class="chat-bubble-header">
+            <span class="member-dot ${dotClass}"></span>
+            <span class="chat-bubble-author ${authorClass}">${sanitizeHtml(msg.author || 'Family')}</span>
+            <span class="chat-bubble-time">${sanitizeHtml(timeStr)}</span>
+            ${isMentioned ? '<span class="mention-tag">Mentioned you</span>' : ''}
+            <button type="button" class="chat-convert-btn" data-action="convert-message" data-id="${sanitizeHtml(msg.id)}" aria-label="Copy to note, list or event" title="Copy to note, list or event">
+              <span class="material-symbols-rounded">drive_file_move</span>
+            </button>
+            ${isMine ? `
+              <button type="button" class="chat-delete-btn" data-action="delete-message" data-id="${sanitizeHtml(msg.id)}" aria-label="Delete message" title="Delete message">
+                <span class="material-symbols-rounded">close</span>
               </button>
-              ${isMine ? `
-                <button type="button" class="chat-delete-btn" data-action="delete-message" data-id="${sanitizeHtml(msg.id)}" aria-label="Delete message" title="Delete message">
-                  <span class="material-symbols-rounded">close</span>
-                </button>
-              ` : ''}
-            </div>
-            ${msg.imageUrl ? `
-              <div class="chat-bubble-image-wrap">
-                <img src="${sanitizeHtml(msg.imageUrl)}" alt="Photo from ${sanitizeHtml(msg.author)}" class="chat-bubble-image" loading="lazy">
-              </div>
             ` : ''}
-            ${textHtml ? `<p class="chat-bubble-text">${textHtml}</p>` : ''}
-            ${linkedHtml}
           </div>
+          ${msg.imageUrl ? `
+            <div class="chat-bubble-image-wrap">
+              <img src="${sanitizeHtml(msg.imageUrl)}" alt="Photo from ${sanitizeHtml(msg.author)}" class="chat-bubble-image" loading="lazy">
+            </div>
+          ` : ''}
+          ${textHtml ? `<p class="chat-bubble-text">${textHtml}</p>` : ''}
+          ${linkedHtml}
+        </div>
+      `;
+
+      if (isMine) {
+        return `
+          <div class="chat-message-row is-outgoing ${isMentioned ? 'is-mentioned' : ''}" data-message-id="${sanitizeHtml(msg.id)}">
+            <div class="chat-read-drawer" aria-hidden="true">
+              <div class="chat-read-content">
+                <span class="read-status-title">Read by</span>
+                <div class="read-status-users">
+                  ${renderReadStatusUsers(msg)}
+                </div>
+              </div>
+            </div>
+            <div class="chat-bubble-slider">
+              ${bubbleContent}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="chat-message-row is-incoming ${isMentioned ? 'is-mentioned' : ''}" data-message-id="${sanitizeHtml(msg.id)}">
+          ${bubbleContent}
         </div>
       `;
     }).join('');
 
+    if (window.FamCalReadReceipts && typeof window.FamCalReadReceipts.attachSwipeHandlers === 'function') {
+      window.FamCalReadReceipts.attachSwipeHandlers(feed);
+    }
+
     scrollToBottom(false);
+  }
+
+  function renderReadStatusUsers(msg) {
+    if (!msg) return `<span class="read-pill read-pill-delivered">Delivered</span>`;
+
+    let readers = [];
+    if (window.FamCalReadReceipts && typeof window.FamCalReadReceipts.getReadersForMessage === 'function') {
+      readers = window.FamCalReadReceipts.getReadersForMessage(msg);
+    } else {
+      const authorLower = (msg.author || '').toLowerCase();
+      readers = Array.isArray(msg.readBy)
+        ? msg.readBy.filter(u => String(u).toLowerCase() !== authorLower)
+        : [];
+    }
+
+    if (readers.length === 0) {
+      return `<span class="read-pill read-pill-delivered">Delivered</span>`;
+    }
+
+    return readers.map(user => {
+      const dotClass = `dot-${String(user).toLowerCase()}`;
+      return `
+        <span class="read-pill">
+          <span class="member-dot ${dotClass}"></span>
+          <span>${sanitizeHtml(user)}</span>
+        </span>
+      `;
+    }).join('');
   }
 
   function scrollToBottom(smooth = false) {
@@ -473,12 +531,40 @@
         if (badge) badge.classList.add('hidden');
 
         scrollToBottom(false);
+        if (window.FamCalReadReceipts && typeof window.FamCalReadReceipts.markMessagesAsRead === 'function') {
+          window.FamCalReadReceipts.markMessagesAsRead(currentMessages);
+        }
         if (!db) {
           initFirestore();
         }
       }
     });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const currentTab = localStorage.getItem('famcal-active-tab') || 'calendar';
+        if (currentTab === 'messages' && window.FamCalReadReceipts && typeof window.FamCalReadReceipts.markMessagesAsRead === 'function') {
+          window.FamCalReadReceipts.markMessagesAsRead(currentMessages);
+        }
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      const currentTab = localStorage.getItem('famcal-active-tab') || 'calendar';
+      if (currentTab === 'messages' && window.FamCalReadReceipts && typeof window.FamCalReadReceipts.markMessagesAsRead === 'function') {
+        window.FamCalReadReceipts.markMessagesAsRead(currentMessages);
+      }
+    });
   }
+
+  window.FamCalMessages = {
+    getCurrentMessages: () => currentMessages,
+    refreshRendering: () => {
+      if (currentMessages && currentMessages.length > 0) {
+        renderMessages(currentMessages);
+      }
+    }
+  };
 
   function init() {
     setupDomEvents();
