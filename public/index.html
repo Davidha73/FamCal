@@ -83,6 +83,11 @@
           <span>Add Event</span>
         </button>
       </div>
+
+      <div class="feed-header">
+        <h2 id="events-heading" class="feed-title">Upcoming Events</h2>
+        <span id="events-count" class="feed-counter">Loading...</span>
+      </div>
     </div>
 
     <div id="form-drawer" class="modal-backdrop hidden" aria-hidden="true">
@@ -198,10 +203,6 @@
     </div>
 
     <section class="events-feed" aria-labelledby="events-heading">
-      <div class="feed-header">
-        <h2 id="events-heading" class="feed-title">Upcoming Events</h2>
-        <span id="events-count" class="feed-counter">Loading...</span>
-      </div>
       <div id="calendar-events" class="events-grid">
         <!-- Event cards will be dynamically injected here -->
       </div>
