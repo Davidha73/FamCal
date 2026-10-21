@@ -430,6 +430,12 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   padding: 0 2px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.calendar-days-grid.is-transitioning {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .calendar-day-cell {

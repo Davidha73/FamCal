@@ -1,63 +1,56 @@
-// JustUs - Collapsible Mobile Calendar Scroll Module
+// JustUs - Collapsible Mobile Calendar Module
 (function () {
   'use strict';
 
-  let isAutoCollapsed = false;
-  let preferredMode = 'month';
   let touchStartY = 0;
 
+  function setViewSmoothly(nextMode, persist = true) {
+    if (!window.FamCalCalendar) return;
+    const daysGrid = document.getElementById('calendar-days-grid');
+    const fixedContainer = document.getElementById('calendar-fixed-container');
+
+    if (daysGrid) {
+      daysGrid.classList.add('is-transitioning');
+      setTimeout(() => {
+        window.FamCalCalendar.setViewMode(nextMode, persist);
+        if (fixedContainer) {
+          fixedContainer.classList.toggle('is-collapsed', nextMode === 'week');
+        }
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            daysGrid.classList.remove('is-transitioning');
+          }, 40);
+        });
+      }, 90);
+    } else {
+      window.FamCalCalendar.setViewMode(nextMode, persist);
+      if (fixedContainer) {
+        fixedContainer.classList.toggle('is-collapsed', nextMode === 'week');
+      }
+    }
+  }
+
   function init() {
-    const calendarContainer = document.getElementById('calendar-view-container');
     const fixedContainer = document.getElementById('calendar-fixed-container');
     const calendarCard = document.querySelector('.calendar-card');
     const collapseHandle = document.getElementById('calendar-collapse-handle');
 
-    if (!calendarContainer || !fixedContainer) return;
+    if (!fixedContainer) return;
 
     window.addEventListener('famcal-view-changed', (e) => {
-      if (e.detail && e.detail.manual) {
-        preferredMode = e.detail.mode;
-        isAutoCollapsed = false;
-        if (e.detail.mode === 'week') {
-          fixedContainer.classList.add('is-collapsed');
-        } else {
-          fixedContainer.classList.remove('is-collapsed');
-        }
+      if (e.detail && e.detail.mode) {
+        fixedContainer.classList.toggle('is-collapsed', e.detail.mode === 'week');
       }
     });
 
-    window.addEventListener('scroll', () => {
-      const activeTab = localStorage.getItem('famcal-active-tab') || 'calendar';
-      if (activeTab !== 'calendar') return;
-      if (!window.FamCalCalendar) return;
-
-      const currentMode = window.FamCalCalendar.getViewMode();
-      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
-
-      if (scrollY > 45 && currentMode === 'month' && !isAutoCollapsed) {
-        preferredMode = 'month';
-        isAutoCollapsed = true;
-        window.FamCalCalendar.setViewMode('week', false);
-        fixedContainer.classList.add('is-collapsed');
-      } else if (scrollY < 15 && isAutoCollapsed) {
-        isAutoCollapsed = false;
-        window.FamCalCalendar.setViewMode('month', false);
-        fixedContainer.classList.remove('is-collapsed');
-      }
-    }, { passive: true });
-
     if (collapseHandle) {
-      collapseHandle.addEventListener('click', () => {
+      collapseHandle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!window.FamCalCalendar) return;
         const currentMode = window.FamCalCalendar.getViewMode();
         const nextMode = currentMode === 'month' ? 'week' : 'month';
-        isAutoCollapsed = false;
-        window.FamCalCalendar.setViewMode(nextMode, true);
-        if (nextMode === 'week') {
-          fixedContainer.classList.add('is-collapsed');
-        } else {
-          fixedContainer.classList.remove('is-collapsed');
-        }
+        setViewSmoothly(nextMode, true);
       });
     }
 
@@ -71,17 +64,13 @@
         const diffY = touchEndY - touchStartY;
         if (!window.FamCalCalendar) return;
 
-        if (diffY < -40) {
+        if (diffY < -45) {
           if (window.FamCalCalendar.getViewMode() === 'month') {
-            isAutoCollapsed = true;
-            window.FamCalCalendar.setViewMode('week', false);
-            fixedContainer.classList.add('is-collapsed');
+            setViewSmoothly('week', true);
           }
-        } else if (diffY > 40) {
+        } else if (diffY > 45) {
           if (window.FamCalCalendar.getViewMode() === 'week') {
-            isAutoCollapsed = false;
-            window.FamCalCalendar.setViewMode('month', false);
-            fixedContainer.classList.remove('is-collapsed');
+            setViewSmoothly('month', true);
           }
         }
       }, { passive: true });
