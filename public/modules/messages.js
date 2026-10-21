@@ -133,7 +133,26 @@
       `;
     }).join('');
 
-    feed.scrollTop = feed.scrollHeight;
+    scrollToBottom(false);
+  }
+
+  function scrollToBottom(smooth = false) {
+    const feed = document.getElementById('messages-feed');
+    if (!feed) return;
+    requestAnimationFrame(() => {
+      feed.scrollTo({
+        top: feed.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+      const imgs = feed.querySelectorAll('img');
+      imgs.forEach((img) => {
+        if (!img.complete) {
+          img.addEventListener('load', () => {
+            feed.scrollTop = feed.scrollHeight;
+          }, { once: true });
+        }
+      });
+    });
   }
 
   async function ensureDb() {
@@ -229,8 +248,10 @@
 
       if (input) {
         input.value = '';
+        input.rows = 1;
         input.focus();
       }
+      scrollToBottom(true);
     } catch (err) {
       console.error('Failed to send message:', err);
       alert('Could not send message: ' + (err.message || 'Unknown error'));
@@ -420,6 +441,18 @@
     if (input) {
       if (window.FamCalMentions) window.FamCalMentions.attachAutocomplete(input);
       if (window.FamCalMessageLinks) window.FamCalMessageLinks.attachSlashCommands(input);
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (form) form.requestSubmit();
+        }
+      });
+
+      input.addEventListener('input', () => {
+        const lineCount = (input.value.match(/\n/g) || []).length + 1;
+        input.rows = Math.min(Math.max(lineCount, Math.floor(input.scrollHeight / 22)), 4);
+      });
     }
 
     window.addEventListener('famcal-firebase-ready', (e) => {
@@ -435,12 +468,7 @@
         const badge = document.getElementById('messages-badge');
         if (badge) badge.classList.add('hidden');
 
-        const currentFeed = document.getElementById('messages-feed');
-        if (currentFeed) {
-          setTimeout(() => {
-            currentFeed.scrollTop = currentFeed.scrollHeight;
-          }, 60);
-        }
+        scrollToBottom(false);
         if (!db) {
           initFirestore();
         }

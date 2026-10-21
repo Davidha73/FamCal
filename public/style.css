@@ -2623,6 +2623,11 @@ body.keyboard-open #messages-view-container {
   flex-direction: column;
   gap: 12px;
   padding: 6px 2px 12px 2px;
+  scroll-behavior: smooth;
+}
+
+.messages-feed > :first-child {
+  margin-top: auto;
 }
 
 .messages-empty {
@@ -2713,12 +2718,12 @@ body.keyboard-open #messages-view-container {
 
 .messages-compose-form {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  padding: 5px 6px 5px 16px;
+  border-radius: 22px;
+  padding: 5px 6px 5px 12px;
   margin-top: 8px;
   transition: border-color 0.2s ease;
 }
@@ -2731,11 +2736,18 @@ body.keyboard-open #messages-view-container {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 16px;
+  font-size: 15px;
   font-family: inherit;
   color: var(--text-primary);
   outline: none;
-  min-height: 36px;
+  min-height: 24px;
+  max-height: 120px;
+  line-height: 1.4;
+  padding: 6px 0;
+  resize: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+  margin-bottom: 2px;
 }
 
 .messages-send-btn {
@@ -2750,6 +2762,7 @@ body.keyboard-open #messages-view-container {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  margin-bottom: 1px;
   transition: transform 0.12s ease;
 }
 

@@ -139,6 +139,13 @@ exports.handler = async (event) => {
 
       // If senderToken is not provided and user matches sender, skip to avoid self-notification
       if (!senderToken && !isTest && sender && user === sender) return null;
+
+      // Skip devices that currently have the app open and active (realtime listeners update UI directly)
+      const isActive = fields.isActive?.booleanValue === true;
+      const lastActiveRaw = fields.lastActiveAt?.timestampValue;
+      const lastActiveTime = lastActiveRaw ? new Date(lastActiveRaw).getTime() : 0;
+      const isRecentlyActive = isActive && (Date.now() - lastActiveTime < 180000);
+      if (!isTest && isRecentlyActive) return null;
       const mentions = Array.isArray(payload.mentions) ? payload.mentions.map(m => String(m).toLowerCase()) : [];
       const isMentioned = mentions.includes(user) || (user === 'olivia' && mentions.includes('liv')) || (user === 'liv' && mentions.includes('olivia'));
       const docTitle = isMentioned ? `💬 ${payload.sender || 'Someone'} mentioned you` : title;

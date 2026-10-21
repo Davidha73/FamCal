@@ -4,7 +4,7 @@ try {
   console.warn('FCM SW script import failed:', err);
 }
 
-const CACHE_NAME = 'famcal-shell-v98';
+const CACHE_NAME = 'famcal-shell-v101';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -36,6 +36,7 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(SHELL_ASSETS);

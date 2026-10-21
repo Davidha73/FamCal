@@ -240,6 +240,8 @@
           await db.collection('fcm_tokens').doc(token).set({
             token,
             user: currentUser,
+            isActive: document.visibilityState === 'visible',
+            lastActiveAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           console.log('FCM token synchronized for:', currentUser);
@@ -260,6 +262,26 @@
       if (showFeedback) alert('Registration error: ' + err.message);
     }
   }
+
+  function updateActiveStatus(isActive) {
+    const token = currentDeviceToken || localStorage.getItem('famcal_fcm_token');
+    if (!token || typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      const db = firebase.firestore();
+      db.collection('fcm_tokens').doc(token).set({
+        isActive: !!isActive,
+        lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    } catch (_) {}
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    updateActiveStatus(document.visibilityState === 'visible');
+  });
+  window.addEventListener('focus', () => updateActiveStatus(true));
+  window.addEventListener('blur', () => updateActiveStatus(false));
+  window.addEventListener('pagehide', () => updateActiveStatus(false));
+  window.addEventListener('beforeunload', () => updateActiveStatus(false));
 
 
   async function initNotifications() {

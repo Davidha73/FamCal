@@ -1,10 +1,11 @@
-## [2026-10-21T18:25:00+01:00 / v2.30.64]
+## [2026-10-21T18:41:00+01:00 / v2.30.67]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Suppressed intrusive push notifications while the app is actively open in the foreground across service worker push handlers, background messaging listeners, and in-app message listeners.
+- **Status:** Converted message input into an auto-expanding multi-line textarea that wraps long text to new lines, expands up to 4 rows, supports Enter to send and Shift+Enter for manual line breaks, and resets smoothly on send.
 - **Files Changed:**
-  - `public/firebase-messaging-sw.js`
-  - `public/modules/notifications.js`
+  - `public/index.html`
+  - `public/style.css`
+  - `public/modules/messages.js`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Validate that sending a message while the app is active updates the chat feed in real time without triggering a system notification banner, and that notifications only appear when the app is minimized or locked.
+- **Next Objectives:** Type a long message in the chat input to confirm text wraps to subsequent lines as it reaches the edge, and verify Enter sends while Shift+Enter inserts a new line.
