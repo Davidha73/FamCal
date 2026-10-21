@@ -442,8 +442,12 @@
       if (window.FamCalMentions) window.FamCalMentions.attachAutocomplete(input);
       if (window.FamCalMessageLinks) window.FamCalMessageLinks.attachSlashCommands(input);
 
+      const isTouchDevice = () => {
+        return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+      };
+
       input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (!isTouchDevice() && e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           if (form) form.requestSubmit();
         }
