@@ -1,9 +1,15 @@
-## [2026-10-21T20:34:00+01:00 / v2.30.81]
+## [2026-10-21T20:45:00+01:00 / v2.30.82]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Moved the selected date heading and event count indicator into `calendar-fixed-container`, ensuring they stay pinned in view alongside the calendar controls while event cards scroll underneath.
+- **Status:** Refactored monolithic `style.css` (3,775 lines) into 5 focused domain stylesheets (`base.css`, `calendar.css`, `modals.css`, `noticeboard.css`, `messages.css`). Configured parallel stylesheet loading in `index.html`, retained `@import` rules in `style.css` for backwards compatibility, and cached assets under service worker `v116`.
 - **Files Changed:**
+  - `public/styles/base.css`
+  - `public/styles/calendar.css`
+  - `public/styles/modals.css`
+  - `public/styles/noticeboard.css`
+  - `public/styles/messages.css`
+  - `public/style.css`
   - `public/index.html`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Verify that the date title and event counter remain permanently visible at the top of the calendar view during scroll.
+- **Next Objectives:** Verify UI rendering across calendar, noticeboard, messages, and modals in browser.

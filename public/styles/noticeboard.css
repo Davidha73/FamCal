@@ -1,0 +1,885 @@
+/* JustUs - Noticeboard, Notes, Interactive Lists, Checklists & Attachments */
+
+/* Noticeboard Card */
+.noticeboard-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Noticeboard Fixed Container */
+.noticeboard-fixed-container {
+  position: sticky;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  z-index: 20;
+  margin-top: -16px;
+  padding: 16px 0 8px 0;
+  background-color: var(--bg-primary);
+  margin-bottom: 14px;
+}
+
+.noticeboard-header-card {
+  margin-bottom: 0;
+}
+
+.noticeboard-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.noticeboard-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.noticeboard-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.noticeboard-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.btn-add-notice {
+  flex: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  gap: 4px;
+  border-radius: var(--radius-pill);
+}
+
+/* Noticeboard Pin Dropdown Submenu */
+.notice-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notice-menu-arrow {
+  font-size: 18px;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.notice-menu-wrapper.is-open .notice-menu-arrow {
+  transform: rotate(180deg);
+}
+
+.notice-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 155px;
+  background-color: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  animation: noticeMenuFade 0.16s ease-out;
+}
+
+.notice-dropdown-menu.hidden {
+  display: none;
+}
+
+@keyframes noticeMenuFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notice-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  width: 100%;
+}
+
+.notice-dropdown-item:hover,
+.notice-dropdown-item:focus-visible {
+  background-color: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.notice-dropdown-item .material-symbols-rounded {
+  font-size: 18px;
+  color: var(--accent-primary);
+}
+
+/* Noticeboard Cards Grid */
+.noticeboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notice-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--color-other);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.notice-card:hover {
+  border-color: rgba(0, 122, 255, 0.25);
+}
+
+.notice-card.is-pinned {
+  border-color: rgba(255, 149, 0, 0.45);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(255, 149, 0, 0.05) 100%);
+}
+
+.notice-card.is-pinned::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff9500, #ffcc00);
+}
+
+.notice-card.is-completed {
+  opacity: 0.78;
+}
+
+.notice-card.is-completed .notice-card-text,
+.notice-card.is-completed .list-card-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Author left border accents for notice and list cards */
+.notice-card.author-border-dad {
+  border-left-color: var(--color-dad);
+}
+
+.notice-card.author-border-mum {
+  border-left-color: var(--color-mum);
+}
+
+.notice-card.author-border-owen {
+  border-left-color: var(--color-owen);
+}
+
+.notice-card.author-border-liv,
+.notice-card.author-border-olivia {
+  border-left-color: var(--color-liv);
+}
+
+.notice-card.author-border-other {
+  border-left-color: var(--color-other);
+}
+
+.notice-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notice-card-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notice-author-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.notice-timestamp {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.notice-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notice-category-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background-color: var(--action-secondary-bg);
+  color: var(--text-secondary);
+}
+
+.notice-category-tag.category-list {
+  background-color: rgba(0, 122, 255, 0.12);
+  color: #007aff;
+}
+
+.notice-category-tag.category-note {
+  background-color: rgba(0, 122, 255, 0.12);
+  color: #007aff;
+}
+
+.notice-category-tag.category-reminder {
+  background-color: rgba(255, 149, 0, 0.14);
+  color: #ff9500;
+}
+
+.notice-category-tag.category-urgent {
+  background-color: rgba(255, 59, 48, 0.14);
+  color: #ff3b30;
+}
+
+.notice-category-tag.category-shoutout {
+  background-color: rgba(175, 82, 222, 0.14);
+  color: #af52de;
+}
+
+.notice-category-tag.category-love {
+  background-color: rgba(255, 45, 85, 0.14);
+  color: #ff2d55;
+}
+
+.notice-pin-indicator {
+  color: #ff9500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.notice-reminder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ff9500;
+  background-color: rgba(255, 149, 0, 0.12);
+  border: 1px solid rgba(255, 149, 0, 0.25);
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.notice-reminder-badge .material-symbols-rounded {
+  font-size: 14px;
+}
+
+/* Category Enhancements Styling */
+.category-fx-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.notice-card.is-urgent {
+  border-left: 4px solid #ff3b30;
+  background: linear-gradient(to bottom right, rgba(255, 59, 48, 0.05), var(--bg-card));
+  box-shadow: 0 4px 18px rgba(255, 59, 48, 0.12);
+}
+
+.notice-card.is-love {
+  border-left: 4px solid #ff2d55;
+  background: linear-gradient(to bottom right, rgba(255, 45, 85, 0.04), var(--bg-card));
+  box-shadow: 0 4px 18px rgba(255, 45, 85, 0.1);
+}
+
+.notice-love-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ff2d55;
+  background-color: rgba(255, 45, 85, 0.1);
+  border: 1px solid rgba(255, 45, 85, 0.22);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-top: 6px;
+}
+
+.notice-expiry-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--bg-hover);
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-top: 6px;
+}
+
+.notice-urgent-ack-row {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notice-urgent-ack-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  background-color: rgba(255, 59, 48, 0.08);
+  color: #ff3b30;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.notice-urgent-ack-btn.is-acknowledged {
+  background-color: #34c759;
+  border-color: #34c759;
+  color: #ffffff;
+}
+
+.notice-urgent-ack-list {
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notice-pin-indicator .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.notice-card-body {
+  line-height: 1.5;
+}
+
+.notice-card-text {
+  font-size: 14.5px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notice-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+  gap: 8px;
+}
+
+.notice-footer-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.notice-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.notice-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
+}
+
+.notice-action-btn:active {
+  transform: scale(0.92);
+}
+
+.notice-action-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.notice-like-btn.is-liked {
+  color: #ff2d55;
+}
+
+.notice-like-btn:hover {
+  background-color: rgba(255, 45, 85, 0.08);
+  color: #ff2d55;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 84px;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.noticeboard-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.noticeboard-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background-color: var(--action-secondary-bg);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.noticeboard-empty-icon .material-symbols-rounded {
+  font-size: 32px;
+}
+
+#noticeboard-empty-add-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.28);
+  margin-top: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+#noticeboard-empty-add-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+}
+
+/* Noticeboard Action Buttons */
+.noticeboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-add-list {
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+}
+
+/* List Card & Interactive Checklist */
+.list-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.list-title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  cursor: pointer;
+  user-select: none;
+  background: none;
+}
+
+.list-collapse-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  transition: color 0.15s ease, background-color 0.15s ease;
+  background: none;
+}
+
+.list-collapse-btn:hover {
+  background-color: var(--action-secondary-bg);
+  color: var(--text-primary);
+}
+
+.list-collapse-btn .material-symbols-rounded {
+  font-size: 20px;
+}
+
+.list-card-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-collapsible-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 0.2s ease;
+}
+
+.notice-card.is-collapsed .list-collapsible-body,
+.list-collapsible-body.is-collapsed {
+  display: none !important;
+}
+
+.list-progress-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background-color: var(--action-edit-bg);
+  color: var(--action-edit-text);
+  white-space: nowrap;
+}
+
+.list-items-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-checklist-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  transition: opacity 0.2s ease;
+}
+
+.list-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+}
+
+.list-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.list-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-input);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+
+.list-checkbox-input:checked + .list-checkbox-custom {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.list-checkbox-input:checked + .list-checkbox-custom::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid var(--accent-contrast);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-0.5px, -1px);
+}
+
+.list-item-text {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+  transition: color 0.18s ease, text-decoration 0.18s ease;
+}
+
+.list-checklist-item.is-done .list-item-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Bidirectional Linking Badge */
+.notice-linked-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.notice-linked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--accent-primary);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 100%;
+  min-width: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.notice-linked-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-linked-pill:hover {
+  background-color: var(--action-edit-bg);
+  border-color: var(--accent-primary);
+}
+
+.notice-linked-pill:active {
+  transform: scale(0.96);
+}
+
+.notice-linked-pill .material-symbols-rounded {
+  font-size: 15px;
+}
+
+/* Highlight pulse when navigating via link pill */
+.notice-card.is-highlighted {
+  animation: pulseCard 1.8s ease;
+}
+
+@keyframes pulseCard {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.5);
+    border-color: var(--accent-primary);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(0, 122, 255, 0);
+    border-color: var(--accent-primary);
+  }
+  100% {
+    box-shadow: var(--shadow-card);
+    border-color: var(--border-color);
+  }
+}
+
+/* List Modal Item Rows */
+.list-modal-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.btn-text-action {
+  background: transparent;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.list-modal-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.list-modal-item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-modal-drag-icon {
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.list-modal-item-input {
+  flex: 1;
+}
+
+.list-modal-remove-item-btn {
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+}
+
+.list-modal-remove-item-btn:hover {
+  color: #ff3b30;
+}
+
+/* Note Photo Attachments */
+.btn-attach-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  padding: 8px 14px;
+}
+
+.btn-attach-photo .material-symbols-rounded {
+  font-size: 20px;
+}
+
+.note-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.note-photo-preview.hidden {
+  display: none !important;
+}
+
+.note-photo-thumb-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: var(--bg-input);
+}
+
+.note-photo-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.note-photo-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-photo-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.notice-card-image-wrap {
+  margin: 6px 0 10px;
+  width: 100%;
+  max-height: 220px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-input);
+}
+
+.notice-card-image {
+  width: 100%;
+  height: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.notice-card-image:hover {
+  opacity: 0.95;
+}
+
+.notice-card-image:active {
+  transform: scale(0.98);
+}

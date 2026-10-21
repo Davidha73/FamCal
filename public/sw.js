@@ -4,7 +4,7 @@ try {
   console.warn('FCM SW script import failed:', err);
 }
 
-const CACHE_NAME = 'famcal-shell-v115';
+const CACHE_NAME = 'famcal-shell-v116';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -28,6 +28,11 @@ const SHELL_ASSETS = [
   '/modules/typing-indicator.js',
   '/app.js',
   '/style.css',
+  '/styles/base.css',
+  '/styles/calendar.css',
+  '/styles/modals.css',
+  '/styles/noticeboard.css',
+  '/styles/messages.css',
   '/JustUs Splash.png',
   '/JustUs Icon.png'
 ];
