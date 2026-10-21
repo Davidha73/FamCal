@@ -1039,6 +1039,7 @@ if (viewMonthBtn) {
     await setSetting('view-mode', 'month');
     currentViewDate = new Date(selectedDate);
     renderCalendar();
+    window.dispatchEvent(new CustomEvent('famcal-view-changed', { detail: { mode: 'month', manual: true } }));
   });
 }
 
@@ -1048,6 +1049,7 @@ if (viewWeekBtn) {
     await setSetting('view-mode', 'week');
     currentViewDate = new Date(selectedDate);
     renderCalendar();
+    window.dispatchEvent(new CustomEvent('famcal-view-changed', { detail: { mode: 'week', manual: true } }));
   });
 }
 
@@ -1149,5 +1151,17 @@ window.addEventListener('load', async () => {
       console.warn('Service worker registration failed:', err);
     });
   }
+  window.FamCalCalendar = {
+    getViewMode: () => calendarViewMode,
+    setViewMode: async (mode, persist = true) => {
+      calendarViewMode = mode;
+      if (persist) {
+        await setSetting('view-mode', mode);
+      }
+      currentViewDate = new Date(selectedDate);
+      renderCalendar();
+    },
+    getSelectedDate: () => selectedDate
+  };
   loadEvents();
 });

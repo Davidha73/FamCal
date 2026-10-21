@@ -302,7 +302,31 @@ body {
   border-radius: var(--radius-card);
   padding: 16px;
   box-shadow: var(--shadow-card);
-  transition: background-color 0.25s ease, border-color 0.25s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease, padding 0.25s ease;
+}
+
+.calendar-collapse-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0 0 0;
+  margin-top: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.collapse-pill-bar {
+  width: 36px;
+  height: 4px;
+  background-color: var(--border-color);
+  border-radius: var(--radius-pill);
+  transition: background-color 0.2s ease, width 0.2s ease;
+}
+
+.calendar-collapse-handle:hover .collapse-pill-bar,
+.calendar-collapse-handle:active .collapse-pill-bar {
+  background-color: var(--text-secondary);
+  width: 46px;
 }
 
 .calendar-top-bar {
