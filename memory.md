@@ -1,10 +1,9 @@
-## [2026-10-21T19:13:00+01:00 / v2.30.71]
+## [2026-10-21T19:52:00+01:00 / v2.30.72]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Replaced disruptive scroll-hijacking with smooth animated transitions for the pinned calendar, allowing instant, graceful toggling between Month and Week views via the handle or swipe gestures with zero scroll jumping.
+- **Status:** Expanded slide gesture detection across the entire calendar view, enabling a natural slide-up motion to smoothly collapse the month grid into the compact week strip, and pulling down at the top to expand the full month.
 - **Files Changed:**
   - `public/modules/calendar-scroll.js`
-  - `public/style.css`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Tap the pill handle beneath the calendar card or swipe up/down on the grid to test the smooth animated transition between Month and Week view while keeping the calendar pinned.
+- **Next Objectives:** On your phone, slide upward anywhere on the calendar view to confirm the smooth transition to week view, and pull downward while at the top to restore the full month.

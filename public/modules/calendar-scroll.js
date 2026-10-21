@@ -3,6 +3,7 @@
   'use strict';
 
   let touchStartY = 0;
+  let touchStartX = 0;
 
   function setViewSmoothly(nextMode, persist = true) {
     if (!window.FamCalCalendar) return;
@@ -32,7 +33,7 @@
 
   function init() {
     const fixedContainer = document.getElementById('calendar-fixed-container');
-    const calendarCard = document.querySelector('.calendar-card');
+    const calendarView = document.getElementById('calendar-view-container');
     const collapseHandle = document.getElementById('calendar-collapse-handle');
 
     if (!fixedContainer) return;
@@ -54,27 +55,41 @@
       });
     }
 
-    if (calendarCard) {
-      calendarCard.addEventListener('touchstart', (e) => {
+    const gestureTarget = calendarView || document;
+
+    gestureTarget.addEventListener('touchstart', (e) => {
+      const activeTab = localStorage.getItem('famcal-active-tab') || 'calendar';
+      if (activeTab !== 'calendar') return;
+      if (e.touches && e.touches.length === 1) {
         touchStartY = e.touches[0].clientY;
-      }, { passive: true });
+        touchStartX = e.touches[0].clientX;
+      }
+    }, { passive: true });
 
-      calendarCard.addEventListener('touchend', (e) => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const diffY = touchEndY - touchStartY;
-        if (!window.FamCalCalendar) return;
+    gestureTarget.addEventListener('touchend', (e) => {
+      const activeTab = localStorage.getItem('famcal-active-tab') || 'calendar';
+      if (activeTab !== 'calendar') return;
+      if (!window.FamCalCalendar) return;
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
 
-        if (diffY < -45) {
-          if (window.FamCalCalendar.getViewMode() === 'month') {
-            setViewSmoothly('week', true);
-          }
-        } else if (diffY > 45) {
-          if (window.FamCalCalendar.getViewMode() === 'week') {
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchEndX = e.changedTouches[0].clientX;
+      const diffY = touchEndY - touchStartY;
+      const diffX = touchEndX - touchStartX;
+
+      if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 35) {
+        const currentMode = window.FamCalCalendar.getViewMode();
+
+        if (diffY < -35 && currentMode === 'month') {
+          setViewSmoothly('week', true);
+        } else if (diffY > 35 && currentMode === 'week') {
+          const scrollPos = window.scrollY || document.documentElement.scrollTop || 0;
+          if (scrollPos <= 20) {
             setViewSmoothly('month', true);
           }
         }
-      }, { passive: true });
-    }
+      }
+    }, { passive: true });
   }
 
   if (document.readyState === 'loading') {
