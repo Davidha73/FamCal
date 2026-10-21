@@ -253,10 +253,7 @@
       }
 
       messaging.onMessage((payload) => {
-        if (document.visibilityState === 'visible') return;
-        const title = payload.notification?.title || payload.data?.title || 'JustUs Update';
-        const body = payload.notification?.body || payload.data?.body || '';
-        showNotification(title, { body });
+        // App is actively open in foreground - silence notification banners to prevent disruptive popups
       });
     } catch (err) {
       console.warn('FCM registration error:', err.message);

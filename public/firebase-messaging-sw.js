@@ -28,16 +28,24 @@ async function initMessaging() {
 
   const messaging = firebase.messaging();
   messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification?.title || payload.data?.title || 'JustUs Family Update';
-    const rawUrl = payload.data?.url || payload.fcmOptions?.link || '/';
-    const targetTab = payload.data?.tab || (rawUrl.includes('messages') ? 'messages' : (rawUrl.includes('noticeboard') ? 'noticeboard' : 'calendar'));
-    const notificationOptions = {
-      body: payload.notification?.body || payload.data?.body || 'You have a new update in JustUs.',
-      icon: '/JustUs Icon.png',
-      badge: '/JustUs Icon.png',
-      data: { url: rawUrl, tab: targetTab }
-    };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      const isAppForeground = windowClients.some((client) => client.visibilityState === 'visible' || client.focused);
+      if (isAppForeground) {
+        return;
+      }
+      const notificationTitle = payload.notification?.title || payload.data?.title || 'JustUs Family Update';
+      const rawUrl = payload.data?.url || payload.fcmOptions?.link || '/';
+      const targetTab = payload.data?.tab || (rawUrl.includes('messages') ? 'messages' : (rawUrl.includes('noticeboard') ? 'noticeboard' : 'calendar'));
+      const notifTag = payload.data?.tag || `famcal_${Date.now()}`;
+      const notificationOptions = {
+        body: payload.notification?.body || payload.data?.body || 'You have a new update in JustUs.',
+        icon: '/JustUs Icon.png',
+        badge: '/JustUs Icon.png',
+        tag: notifTag,
+        data: { url: rawUrl, tab: targetTab }
+      };
+      return self.registration.showNotification(notificationTitle, notificationOptions);
+    });
   });
 }
 
@@ -51,6 +59,7 @@ self.addEventListener('push', (event) => {
   let body = 'You have a new update in JustUs.';
   let dataUrl = '/';
   let targetTab = 'calendar';
+  let notifTag = null;
 
   if (event.data) {
     try {
@@ -59,6 +68,7 @@ self.addEventListener('push', (event) => {
       body = payload.notification?.body || payload.data?.body || payload.body || body;
       dataUrl = payload.data?.url || payload.fcmOptions?.link || '/';
       targetTab = payload.data?.tab || (dataUrl.includes('messages') ? 'messages' : (dataUrl.includes('noticeboard') ? 'noticeboard' : 'calendar'));
+      notifTag = payload.data?.tag || payload.notification?.tag || null;
     } catch (_) {
       try {
         const text = event.data.text();
@@ -73,12 +83,13 @@ self.addEventListener('push', (event) => {
     badge: '/JustUs Icon.png',
     vibrate: [200, 100, 200],
     sound: 'default',
+    tag: notifTag || `famcal_${body.slice(0, 24)}`,
     data: { url: dataUrl, tab: targetTab }
   };
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      const isAppForeground = windowClients.some((client) => client.visibilityState === 'visible');
+      const isAppForeground = windowClients.some((client) => client.visibilityState === 'visible' || client.focused);
       if (isAppForeground) {
         return;
       }

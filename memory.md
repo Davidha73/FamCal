@@ -1,12 +1,10 @@
-## [2026-10-20T21:06:00+01:00 / v2.30.62]
+## [2026-10-21T18:25:00+01:00 / v2.30.64]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Enabled photo attachments on noticeboard notes with preview thumbnail, card rendering, and lightbox integration, plus automatic photo transfer when converting messages to notes.
+- **Status:** Suppressed intrusive push notifications while the app is actively open in the foreground across service worker push handlers, background messaging listeners, and in-app message listeners.
 - **Files Changed:**
-  - `public/index.html`
-  - `public/modules/noticeboard.js`
-  - `public/modules/message-links.js`
-  - `public/style.css`
+  - `public/firebase-messaging-sw.js`
+  - `public/modules/notifications.js`
   - `public/sw.js`
   - `memory.md`
-- **Next Objectives:** Create a note with an attached photo on the Noticeboard, and use the message transfer button on a photo message to test automatic note creation with image transfer.
+- **Next Objectives:** Validate that sending a message while the app is active updates the chat feed in real time without triggering a system notification banner, and that notifications only appear when the app is minimized or locked.

@@ -163,6 +163,9 @@ async function initUserProfile() {
       window.FamCalShifts.setCurrentUser(user);
     }
     await setSetting('user-profile', user);
+    if (window.FamCalNotifications && typeof window.FamCalNotifications.registerFCMToken === 'function') {
+      window.FamCalNotifications.registerFCMToken(false);
+    }
   };
 
   await syncUserSelection(savedProfile);

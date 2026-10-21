@@ -199,13 +199,16 @@ exports.handler = async (event) => {
             }
           }
         })
-      }); }).then(async (res) => {
+      }).then(async (res) => {
         if (!res.ok) {
           const errText = await res.text();
           console.warn('FCM send failed:', errText);
           return { success: false, error: errText };
         }
         return { success: true };
+      }).catch((err) => {
+        console.warn('FCM send error:', err);
+        return { success: false, error: err.message };
       });
     });
 
