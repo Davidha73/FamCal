@@ -118,7 +118,47 @@ exports.handler = async (event) => {
     }
 
     const tokensData = await tokensRes.json();
-    const documents = tokensData.documents || [];
+    const rawDocuments = tokensData.documents || [];
+
+    // Deduplicate tokens per user profile, retaining the most recent token
+    const normalizeUser = (u) => {
+      const normalized = (u || '').toLowerCase().trim();
+      return (normalized === 'olivia' || normalized === 'liv') ? 'liv' : normalized;
+    };
+
+    const tokensByUser = new Map();
+    const staleDocsToDelete = [];
+
+    for (const doc of rawDocuments) {
+      const fields = doc.fields || {};
+      const token = fields.token?.stringValue;
+      if (!token) continue;
+      const userKey = normalizeUser(fields.user?.stringValue) || token;
+      const lastActiveRaw = fields.lastActiveAt?.timestampValue || fields.updatedAt?.timestampValue;
+      const lastActiveTime = lastActiveRaw ? new Date(lastActiveRaw).getTime() : 0;
+
+      const existing = tokensByUser.get(userKey);
+      if (!existing) {
+        tokensByUser.set(userKey, { doc, lastActiveTime });
+      } else if (lastActiveTime > existing.lastActiveTime) {
+        staleDocsToDelete.push(existing.doc);
+        tokensByUser.set(userKey, { doc, lastActiveTime });
+      } else {
+        staleDocsToDelete.push(doc);
+      }
+    }
+
+    // Asynchronously delete duplicate stale tokens from Firestore
+    staleDocsToDelete.forEach((staleDoc) => {
+      if (staleDoc.name) {
+        fetch(`https://firestore.googleapis.com/v1/${staleDoc.name}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }).catch((e) => console.warn('Failed to delete duplicate stale token:', e));
+      }
+    });
+
+    const documents = Array.from(tokensByUser.values()).map(v => v.doc);
 
     const targetToken = payload.targetToken;
     const senderToken = payload.senderToken;
@@ -210,6 +250,12 @@ exports.handler = async (event) => {
         if (!res.ok) {
           const errText = await res.text();
           console.warn('FCM send failed:', errText);
+          if (doc.name && (res.status === 404 || errText.includes('UNREGISTERED') || errText.includes('NOT_FOUND') || errText.includes('InvalidArgument'))) {
+            fetch(`https://firestore.googleapis.com/v1/${doc.name}`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${accessToken}` }
+            }).catch(() => {});
+          }
           return { success: false, error: errText };
         }
         return { success: true };

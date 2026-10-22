@@ -1,15 +1,10 @@
-## [2026-10-21T20:45:00+01:00 / v2.30.82]
+## [2026-10-22T21:47:35+01:00 / v2.30.83]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Refactored monolithic `style.css` (3,775 lines) into 5 focused domain stylesheets (`base.css`, `calendar.css`, `modals.css`, `noticeboard.css`, `messages.css`). Configured parallel stylesheet loading in `index.html`, retained `@import` rules in `style.css` for backwards compatibility, and cached assets under service worker `v116`.
+- **Status:** Resolved triple notification delivery on recipient devices by enforcing user-level FCM token deduplication in `notify.js` and `check-reminders.js` (retaining only the most recently active device per user), auto-deleting stale duplicate or uninstalled tokens, and purging prior device tokens on client sync in `notifications.js`.
 - **Files Changed:**
-  - `public/styles/base.css`
-  - `public/styles/calendar.css`
-  - `public/styles/modals.css`
-  - `public/styles/noticeboard.css`
-  - `public/styles/messages.css`
-  - `public/style.css`
-  - `public/index.html`
-  - `public/sw.js`
+  - `public/modules/notifications.js`
+  - `netlify/functions/notify.js`
+  - `netlify/functions/check-reminders.js`
   - `memory.md`
-- **Next Objectives:** Verify UI rendering across calendar, noticeboard, messages, and modals in browser.
+- **Next Objectives:** Verify push alert single-delivery to Liv's device during next notification dispatch.

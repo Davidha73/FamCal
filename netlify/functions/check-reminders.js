@@ -129,7 +129,26 @@ exports.handler = async () => {
     });
     const tokensData = tokensRes.ok ? await tokensRes.json() : { documents: [] };
     const tokenDocs = tokensData.documents || [];
-    const activeTokens = tokenDocs.map((d) => d.fields?.token?.stringValue).filter(Boolean);
+    const normalizeUser = (u) => {
+      const normalized = (u || '').toLowerCase().trim();
+      return (normalized === 'olivia' || normalized === 'liv') ? 'liv' : normalized;
+    };
+
+    const tokensByUser = new Map();
+    for (const doc of tokenDocs) {
+      const fields = doc.fields || {};
+      const token = fields.token?.stringValue;
+      if (!token) continue;
+      const userKey = normalizeUser(fields.user?.stringValue) || token;
+      const lastActiveRaw = fields.lastActiveAt?.timestampValue || fields.updatedAt?.timestampValue;
+      const lastActiveTime = lastActiveRaw ? new Date(lastActiveRaw).getTime() : 0;
+
+      const existing = tokensByUser.get(userKey);
+      if (!existing || lastActiveTime > existing.lastActiveTime) {
+        tokensByUser.set(userKey, { token, lastActiveTime });
+      }
+    }
+    const activeTokens = Array.from(tokensByUser.values()).map(v => v.token);
 
     // 3. For each due note, send push notification and mark reminded
     let dispatchedCount = 0;

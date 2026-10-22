@@ -237,6 +237,23 @@
         const currentUser = localStorage.getItem('famcal-user-profile') || 'Dad';
         if (firebase.firestore) {
           const db = firebase.firestore();
+          try {
+            const existingTokensSnap = await db.collection('fcm_tokens').where('user', '==', currentUser).get();
+            const batch = db.batch();
+            let hasDeletions = false;
+            existingTokensSnap.forEach((doc) => {
+              if (doc.id !== token) {
+                batch.delete(doc.ref);
+                hasDeletions = true;
+              }
+            });
+            if (hasDeletions) {
+              await batch.commit();
+            }
+          } catch (cleanupErr) {
+            console.warn('Could not clean up old tokens for user:', cleanupErr);
+          }
+
           await db.collection('fcm_tokens').doc(token).set({
             token,
             user: currentUser,
