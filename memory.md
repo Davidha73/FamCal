@@ -1,10 +1,8 @@
-## [2026-10-22T21:47:35+01:00 / v2.30.83]
+## [2026-10-22T22:05:52+01:00 / v2.30.85]
 <!-- CRITICAL: Keep this file under 200 words. Condense history ruthlessly. -->
 
-- **Status:** Resolved triple notification delivery on recipient devices by enforcing user-level FCM token deduplication in `notify.js` and `check-reminders.js` (retaining only the most recently active device per user), auto-deleting stale duplicate or uninstalled tokens, and purging prior device tokens on client sync in `notifications.js`.
+- **Status:** Removed the redundant `messaging.onBackgroundMessage` push handler from `firebase-messaging-sw.js`, consolidating all background notification dispatch into a single top-level push listener with local debouncing and unified tag collapsing.
 - **Files Changed:**
-  - `public/modules/notifications.js`
-  - `netlify/functions/notify.js`
-  - `netlify/functions/check-reminders.js`
+  - `public/firebase-messaging-sw.js`
   - `memory.md`
-- **Next Objectives:** Verify push alert single-delivery to Liv's device during next notification dispatch.
+- **Next Objectives:** Deploy updated files to Netlify production and refresh mobile PWA clients to run the single push listener.

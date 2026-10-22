@@ -190,6 +190,8 @@ exports.handler = async (event) => {
       const isMentioned = mentions.includes(user) || (user === 'olivia' && mentions.includes('liv')) || (user === 'liv' && mentions.includes('olivia'));
       const docTitle = isMentioned ? `💬 ${payload.sender || 'Someone'} mentioned you` : title;
 
+      const resolvedTag = payload.tag || `famcal_${Date.now().toString().slice(0, 10)}_${(body || '').slice(0, 15).replace(/\s+/g, '_')}`;
+
       const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
       return fetch(fcmUrl, {
         method: 'POST',
@@ -208,7 +210,8 @@ exports.handler = async (event) => {
               url: targetUrl,
               tab: targetTab,
               title: docTitle,
-              body
+              body,
+              tag: resolvedTag
             },
             webpush: {
               headers: {
@@ -220,7 +223,8 @@ exports.handler = async (event) => {
                 body,
                 icon: '/JustUs Icon.png',
                 badge: '/JustUs Icon.png',
-                sound: 'default'
+                sound: 'default',
+                tag: resolvedTag
               },
               fcm_options: {
                 link: targetUrl
@@ -229,7 +233,8 @@ exports.handler = async (event) => {
             apns: {
               headers: {
                 'apns-priority': '10',
-                'apns-push-type': 'alert'
+                'apns-push-type': 'alert',
+                'apns-collapse-id': resolvedTag.slice(0, 64)
               },
               payload: {
                 aps: {
@@ -238,7 +243,8 @@ exports.handler = async (event) => {
                     body
                   },
                   sound: 'default',
-                  badge: 1
+                  badge: 1,
+                  'thread-id': 'justus-messages'
                 },
                 url: targetUrl,
                 tab: targetTab

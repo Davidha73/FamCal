@@ -25,35 +25,26 @@ async function initMessaging() {
   if (!firebase.apps.length) {
     firebase.initializeApp(config);
   }
-
-  const messaging = firebase.messaging();
-  messaging.onBackgroundMessage((payload) => {
-    return clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      const isAppForeground = windowClients.some((client) => client.visibilityState === 'visible' || client.focused);
-      if (isAppForeground) {
-        return;
-      }
-      const notificationTitle = payload.notification?.title || payload.data?.title || 'JustUs Family Update';
-      const rawUrl = payload.data?.url || payload.fcmOptions?.link || '/';
-      const targetTab = payload.data?.tab || (rawUrl.includes('messages') ? 'messages' : (rawUrl.includes('noticeboard') ? 'noticeboard' : 'calendar'));
-      const notifTag = payload.data?.tag || `famcal_${Date.now()}`;
-      const notificationOptions = {
-        body: payload.notification?.body || payload.data?.body || 'You have a new update in JustUs.',
-        icon: '/JustUs Icon.png',
-        badge: '/JustUs Icon.png',
-        tag: notifTag,
-        data: { url: rawUrl, tab: targetTab }
-      };
-      return self.registration.showNotification(notificationTitle, notificationOptions);
-    });
-  });
 }
 
 initMessaging().catch((err) => {
   console.warn('SW Firebase messaging bootstrap error:', err);
 });
 
-// Direct top-level push listener to guarantee immediate execution on iOS lock screen
+let lastHandledTag = '';
+let lastHandledTime = 0;
+
+function canShowNotification(tag) {
+  const now = Date.now();
+  if (tag && tag === lastHandledTag && (now - lastHandledTime) < 4000) {
+    return false;
+  }
+  lastHandledTag = tag || '';
+  lastHandledTime = now;
+  return true;
+}
+
+// Primary push listener
 self.addEventListener('push', (event) => {
   let title = 'JustUs Family Update';
   let body = 'You have a new update in JustUs.';
@@ -77,15 +68,7 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const options = {
-    body,
-    icon: '/JustUs Icon.png',
-    badge: '/JustUs Icon.png',
-    vibrate: [200, 100, 200],
-    sound: 'default',
-    tag: notifTag || `famcal_${body.slice(0, 24)}`,
-    data: { url: dataUrl, tab: targetTab }
-  };
+  const resolvedTag = notifTag || `famcal_${body.slice(0, 30)}`;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
@@ -93,6 +76,18 @@ self.addEventListener('push', (event) => {
       if (isAppForeground) {
         return;
       }
+      if (!canShowNotification(resolvedTag)) {
+        return;
+      }
+      const options = {
+        body,
+        icon: '/JustUs Icon.png',
+        badge: '/JustUs Icon.png',
+        vibrate: [200, 100, 200],
+        sound: 'default',
+        tag: resolvedTag,
+        data: { url: dataUrl, tab: targetTab }
+      };
       return self.registration.showNotification(title, options);
     })
   );
