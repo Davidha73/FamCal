@@ -81,6 +81,23 @@
       firebase.initializeApp(config);
     }
 
+    if (firebase.auth) {
+      try {
+        if (!firebase.auth().currentUser) {
+          await firebase.auth().signInAnonymously();
+        }
+        firebase.auth().onAuthStateChanged((user) => {
+          if (!user) {
+            firebase.auth().signInAnonymously().catch((e) => {
+              console.warn('Anonymous auth sign-in error:', e.message);
+            });
+          }
+        });
+      } catch (authErr) {
+        console.warn('Anonymous auth initialization warning:', authErr.message);
+      }
+    }
+
     const db = firebase.firestore();
     const result = {
       firebase,

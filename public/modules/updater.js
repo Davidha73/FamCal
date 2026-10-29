@@ -46,6 +46,14 @@
     });
 
     navigator.serviceWorker.ready.then((registration) => {
+      registration.update().catch(() => {});
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          registration.update().catch(() => {});
+        }
+      });
+
       if (registration.waiting && navigator.serviceWorker.controller) {
         waitingWorker = registration.waiting;
         showUpdateBanner();
